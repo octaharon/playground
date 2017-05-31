@@ -4,11 +4,12 @@
   "description": "playground",
   "main": "index.js",
   "scripts": {
-    "start": "http-server -p 3000 .",
+    "start": "node index.js",
     "buildWin": "set NODE_ENV=production&&node ./node_modules/webpack/bin/webpack.js -p",
     "build": "NODE_ENV=production webpack -p",
     "watch": "webpack-dev-server --hot --progress --colors",
     "test": "karma start"
+    "postinstall":"npm run build"
   },
   "keywords": [
     "webpack",
@@ -61,8 +62,10 @@
     "webpack-dev-server": "^2.4.5"
   },
   "dependencies": {
-    "font-awesome": "^4.7.0",
     "babel-core": "^5.3.3",
-    "babel-loader": "^5.0.0"
+    "babel-loader": "^5.0.0",
+    "ejs": "^2.5.6",
+    "express": "^4.15.3",
+    "font-awesome": "^4.7.0"
   }
 }
