@@ -1,4 +1,5 @@
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
+var webpack = require('webpack');
 var debug = process.env.NODE_ENV !== "production";
 if (debug)
     console.log("running in debug mode");
