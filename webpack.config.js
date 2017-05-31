@@ -12,6 +12,23 @@ function getEntrySources(sources) {
     return sources;
 }
 
+function getPlugins() {
+    var plugs = [
+        new ExtractTextPlugin({
+            filename: './web/style.css',
+            allChunks: true
+        })
+    ];
+    if (!debug) {
+        plugs.push(new webpack.optimize.UglifyJsPlugin({
+            compress: {
+                warnings: false
+            }
+        }));
+    }
+    return plugs;
+}
+
 module.exports = {
     entry: {
         app: getEntrySources([
@@ -48,12 +65,7 @@ module.exports = {
             }
         ]
     },
-    plugins: [
-        new ExtractTextPlugin({
-            filename: './web/style.css',
-            allChunks: true
-        })
-    ],
+    plugins: getPlugins(),
     resolve: {
         extensions: ['.js', '.jsx']
     }
