@@ -3,13 +3,16 @@
   "version": "0.0.1",
   "description": "playground",
   "main": "index.js",
+  "engines": {
+    "node": "6.10.2"
+  },
   "scripts": {
     "start": "node index.js",
     "buildWin": "set NODE_ENV=production&&node ./node_modules/webpack/bin/webpack.js -p",
     "build": "NODE_ENV=production webpack -p",
     "watch": "webpack-dev-server --hot --progress --colors",
     "test": "karma start",
-    "postinstall":"npm run build"
+    "postinstall": "npm run build"
   },
   "keywords": [
     "webpack",
