@@ -12,7 +12,7 @@
     "build": "NODE_ENV=production webpack -p",
     "watch": "webpack-dev-server --hot --progress --colors",
     "test": "karma start",
-    "postinstall": "npm run build"
+    "postinstall": "webpack -p --config ./webpack.config.js --progress"
   },
   "keywords": [
     "webpack",
@@ -61,7 +61,6 @@
     "style-loader": "^0.16.1",
     "underscore": "^1.8.3",
     "url-loader": "^0.5.8",
-    "webpack": "^2.4.0",
     "webpack-dev-server": "^2.4.5"
   },
   "dependencies": {
@@ -69,6 +68,7 @@
     "babel-loader": "^5.0.0",
     "ejs": "^2.5.6",
     "express": "^4.15.3",
-    "font-awesome": "^4.7.0"
+    "font-awesome": "^4.7.0",
+    "webpack": "^2.4.0"
   }
 }
