@@ -4,7 +4,8 @@
   "description": "playground",
   "main": "index.js",
   "engines": {
-    "node": "6.10.2"
+    "node": "6.10.2",
+    "npm": "5.0.0"
   },
   "scripts": {
     "start": "node index.js",
