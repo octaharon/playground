@@ -5,6 +5,15 @@ import ReactDOM from 'react-dom';
 import d3 from '../d3-lib';
 import _ from 'underscore';
 import Timer from '../services/TimerService';
+import PropTypes from 'prop-types';
+
+
+const propTypes = {
+    fgColor: PropTypes.string,
+    step: PropTypes.number,
+    thickness: PropTypes.number
+};
+
 
 const fadeInDuration = 500;
 
@@ -12,21 +21,32 @@ class MoireRoom extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            hueOffset: 0
+            hueOffset: 0,
+            sectorCount: 60
         };
         this.drawForeground = this.drawForeground.bind(this);
         this.drawBackground = this.drawBackground.bind(this);
         this.setDimensions = this.setDimensions.bind(this);
+        this.rotatePalette = this.rotatePalette.bind(this);
     }
 
     setDimensions() {
         let container = d3.select('#moire-room');
         let dimensions = container.node().getBoundingClientRect();
-        let cx = Math.round(dimensions.width / 2);
-        let cy = Math.round(dimensions.height / 2);
+        let cx = Math.ceil(dimensions.width / 2);
+        let cy = Math.ceil(dimensions.height / 2);
         this.container = container;
         this.cx = cx;
         this.cy = cy;
+    }
+
+    closestFraction(largerThan, dividesBy) {
+        let epsilon = 0.0001;
+        let division = largerThan / dividesBy;
+        let modulo = division - Math.floor(division);
+        if (modulo < epsilon)
+            return largerThan;
+        return Math.round(Math.ceil(division) * dividesBy / epsilon) * epsilon;
     }
 
 
@@ -57,7 +77,9 @@ class MoireRoom extends React.Component {
         this.drawBackground();
         this.drawForeground();
         this.fadeIn();
-        Timer.set(this.rotateColors.bind(this), 40);
+        this.timer = Timer.set(this.rotateColors.bind(this), 50);
+        d3.select('body').on('click', (event) => Timer.clear(this.timer));
+
     }
 
     fitInBoundaries(value, min, max) {
@@ -65,20 +87,72 @@ class MoireRoom extends React.Component {
     }
 
     rotateColors() {
-        this.setState({hueOffset: this.state.hueOffset + 1}, this.drawBackground);
+        this.setState({hueOffset: this.state.hueOffset + 0.4}, this.rotatePalette);
     }
 
     fadeIn() {
         this.container.selectAll('svg').transition().attr('opacity', 1).duration(fadeInDuration);
     }
 
+    drawPalette(radius = this.cy) {
+        let sectorCount = this.state.sectorCount;
+        let angleStep = Math.PI * 2 / sectorCount;
+        let r = radius * Math.pow(this.cy / this.cx, 1.5);
+
+        let startAngle = (i) => i * angleStep - Math.PI / 2;
+        let endAngle = (i) => i * angleStep - Math.PI / 2 + angleStep;
+
+        let defs = this.background.select('defs');
+        defs.selectAll('*').remove();
+        defs.selectAll('linearGradient').data(_.range(0, sectorCount)).enter().append("linearGradient")
+            .attr("id", (i) => `svgGradient${i}`)
+            .attr("gradientUnits", "userSpaceOnUse")
+            .attr("x1", (i) => this.fitInBoundaries(r * Math.cos(startAngle(i)), -this.cx, this.cx))
+            .attr("x2", (i) => this.fitInBoundaries(r * Math.cos(endAngle(i)), -this.cx, this.cx))
+            .attr("y1", (i) => this.fitInBoundaries(r * Math.sin(startAngle(i)), -this.cy, this.cy))
+            .attr("y2", (i) => this.fitInBoundaries(r * Math.sin(endAngle(i)), -this.cy, this.cy))
+            .each(function () {
+                let node = d3.select(this);
+                node.append("stop")
+                    .attr('class', 'start')
+                    .attr("offset", "0%")
+                    .attr("stop-opacity", 1);
+                node.append("stop")
+                    .attr('class', 'end')
+                    .attr("offset", "100%")
+                    .attr("stop-opacity", 1);
+            });
+
+        this.rotatePalette();
+    }
+
+
+    rotatePalette() {
+        let hueOffset = this.state.hueOffset;
+        let defs = this.background.select('defs');
+        let setColor = (el, index) => el.attr(
+            'stop-color',
+            d3.hsl((index * 360 / this.state.sectorCount + Math.floor(hueOffset)) % 360 + hueOffset - Math.floor(hueOffset), 1, 0.5)
+              .toString()
+        );
+        defs.selectAll('stop.start')
+            .each(function (datum, i) {
+                setColor(d3.select(this), i);
+            });
+        defs.selectAll('stop.end')
+            .each(function (datum, i) {
+                setColor(d3.select(this), i + 1);
+            });
+    }
+
     drawBackground() {
 
         let bg = this.background;
+
         bg.selectAll('*').remove();
 
         let radius = Math.sqrt(this.cx * this.cx + this.cy * this.cy);
-        let sectorCount = 60;
+        let sectorCount = this.state.sectorCount;
         let angleStep = Math.PI * 2 / sectorCount;
         let sectors = _.range(0, sectorCount, 1);
         let arc = d3.arc()
@@ -87,36 +161,13 @@ class MoireRoom extends React.Component {
                     .startAngle(d => d * angleStep)
                     .endAngle(d => (d + 1) * angleStep + Math.PI / 360);
 
-        let hueOffset = this.state.hueOffset;
+        bg.append("defs");
 
-        let defs = bg.append("defs");
-
-        for (let i of sectors) {
-            let r = radius / 3;
-            let startAngle = i * angleStep - Math.PI / 2;
-            let endAngle = startAngle + angleStep;
-            let gradient = defs.append("linearGradient")
-                               .attr("id", `svgGradient${i}`)
-                               .attr("gradientUnits", "userSpaceOnUse")
-                               .attr("x1", this.fitInBoundaries(r * Math.cos(startAngle), -this.cx, this.cx))
-                               .attr("x2", this.fitInBoundaries(r * Math.cos(endAngle), -this.cx, this.cx))
-                               .attr("y1", this.fitInBoundaries(r * Math.sin(startAngle), -this.cy, this.cy))
-                               .attr("y2", this.fitInBoundaries(r * Math.sin(endAngle), -this.cy, this.cy));
-            gradient.append("stop")
-                    .attr('class', 'start')
-                    .attr("offset", "0%")
-                    .attr("stop-color", d3.hsl((i * 360 / sectorCount + hueOffset) % 360, 1, 0.5).toString())
-                    .attr("stop-opacity", 1);
-
-            gradient.append("stop")
-                    .attr('class', 'end')
-                    .attr("offset", "100%")
-                    .attr("stop-color", d3.hsl(((i + 1) * 360 / sectorCount + hueOffset) % 360, 1, 0.5).toString())
-                    .attr("stop-opacity", 1);
-        }
+        this.drawPalette(radius);
 
         let fill = d => `url(#svgGradient${d})`;
-
+        bg = bg.append("g")
+               .attr("transform", `scale(${(this.cx / this.cy).toFixed(2)}),1)`);
         bg.selectAll('path').data(sectors).enter().append('path')
           .attr('class', 'fillSector')
           .attr("d", arc)
@@ -129,11 +180,10 @@ class MoireRoom extends React.Component {
         let fgColor = d3.rgb(0, 0, 0);
         if (this.props.fgColor)
             fgColor = d3.color(this.props.fgColor);
-        let step = 2.5;
-        let cx = this.cx;
-        let cy = this.cy;
-
-        // let getColor = d3.scaleLinear().domain([0, 2 * cy + 2 * cx]).range([0, 360]);
+        let step = this.props.step;
+        let thickness = this.props.thickness;
+        let cx = this.closestFraction(this.cx, step);
+        let cy = this.closestFraction(this.cy, step);
 
         this.foreground.selectAll('*').remove();
 
@@ -143,7 +193,7 @@ class MoireRoom extends React.Component {
                 .attr("y1", -cy)
                 .attr("x2", i)
                 .attr("y2", cy)
-                .attr("stroke-width", 1)
+                .attr("stroke-width", thickness)
                 .attr("stroke", fgColor.toString());
         }
 
@@ -153,9 +203,11 @@ class MoireRoom extends React.Component {
                 .attr("y1", -i)
                 .attr("x2", cx)
                 .attr("y2", i)
-                .attr("stroke-width", 1)
+                .attr("stroke-width", thickness)
                 .attr("stroke", fgColor.toString());
         }
+
+        //this.foreground.remove();
         return true;
     }
 
@@ -167,5 +219,12 @@ class MoireRoom extends React.Component {
         );
     }
 }
+
+MoireRoom.propTypes = propTypes;
+MoireRoom.defaultProps = {
+    thickness: 2.25,
+    step: 6,
+    fgColor: '#000000'
+};
 
 export default MoireRoom;

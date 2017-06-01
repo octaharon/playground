@@ -49,7 +49,7 @@ class TimerService {
     }
 
     clear(id) {
-        if (this.timers[id] !== undefined)
+        if (this.timers[id] === undefined)
             return false;
         delete this.timers[id];
         this.setMaxInterval();
