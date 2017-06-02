@@ -10,6 +10,7 @@ import d3 from './d3-lib';
 import Delay from 'react-delay';
 
 import MoireRoom from './components/MoireRoom';
+import Rosette from './components/Rosette';
 
 
 const loadDelay = 200;
@@ -37,9 +38,8 @@ class App extends React.Component {
                 <div id="modal-backdrop" style={this.state.loading ? {} : {display: 'none'}}>
                     <ReactSpinner />
                 </div>
-                <Delay wait={loadDelay}>
-                    <MoireRoom />
-                </Delay>
+                <MoireRoom delay={loadDelay}/>
+                <Rosette id="flower-of-life"/>
             </div>
         );
     }

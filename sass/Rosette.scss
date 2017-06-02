@@ -1,0 +1,29 @@
+@import "mixins";
+
+.rosette {
+  @include absolute-center();
+  width: 40vh;
+  height: 40vh;
+  z-index: 100;
+
+  svg {
+    position: absolute;
+    overflow: visible;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    will-change: transform;
+    shape-rendering: geometricPrecision;
+    transform: translateZ(0);
+
+    g.tr {
+      filter: url('#glow');
+      overflow: visible;
+    }
+
+    .circle {
+    }
+  }
+
+}

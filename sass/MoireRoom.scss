@@ -5,16 +5,22 @@
   width: 100vw;
   height: 100vh;
   z-index: 10;
+  -webkit-backface-visibility: hidden;
 
   svg {
     width: 100%;
+    overflow:hidden;
     height: 100%;
     margin: 0px;
     position: absolute;
+    -webkit-backface-visibility: hidden;
+    shape-rendering: auto;
     left: 0;
     top: 0;
 
     &.bg {
+      shape-rendering: optimizeSpeed;
+      will-change: transform;
       z-index: 10;
     }
     &.fg {

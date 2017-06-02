@@ -1,7 +1,6 @@
 require('../../sass/MoireRoom.scss');
 
 import React from 'react';
-import ReactDOM from 'react-dom';
 import d3 from '../d3-lib';
 import _ from 'underscore';
 import Timer from '../services/TimerService';
@@ -11,18 +10,19 @@ import PropTypes from 'prop-types';
 const propTypes = {
     fgColor: PropTypes.string,
     step: PropTypes.number,
-    thickness: PropTypes.number
+    thickness: PropTypes.number,
+    delay: PropTypes.number,
+    rotateSpeed: PropTypes.number,
+    hueOffset: PropTypes.number
 };
 
-
-const fadeInDuration = 500;
 
 class MoireRoom extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            hueOffset: 0,
-            sectorCount: 60
+            hueOffset: props.hueOffset,
+            sectorCount: 45
         };
         this.drawForeground = this.drawForeground.bind(this);
         this.drawBackground = this.drawBackground.bind(this);
@@ -45,7 +45,7 @@ class MoireRoom extends React.Component {
         let division = largerThan / dividesBy;
         let modulo = division - Math.floor(division);
         if (modulo < epsilon)
-            return largerThan;
+            return Math.round(Math.ceil(largerThan + dividesBy) / epsilon) * epsilon;
         return Math.round(Math.ceil(division) * dividesBy / epsilon) * epsilon;
     }
 
@@ -87,17 +87,18 @@ class MoireRoom extends React.Component {
     }
 
     rotateColors() {
-        this.setState({hueOffset: this.state.hueOffset + 0.4}, this.rotatePalette);
+        this.setState({hueOffset: this.state.hueOffset - this.props.rotateSpeed}, this.rotatePalette);
     }
 
     fadeIn() {
-        this.container.selectAll('svg').transition().attr('opacity', 1).duration(fadeInDuration);
+        this.container.select('svg.fg').transition().attr('opacity', 1).duration(this.props.delay / 2);
+        this.container.select('svg.bg').transition().attr('opacity', 1).duration(this.props.delay);
     }
 
     drawPalette(radius = this.cy) {
         let sectorCount = this.state.sectorCount;
         let angleStep = Math.PI * 2 / sectorCount;
-        let r = radius * Math.pow(this.cy / this.cx, 1.5);
+        let r = this.cx/2;
 
         let startAngle = (i) => i * angleStep - Math.PI / 2;
         let endAngle = (i) => i * angleStep - Math.PI / 2 + angleStep;
@@ -123,11 +124,12 @@ class MoireRoom extends React.Component {
                     .attr("stop-opacity", 1);
             });
 
-        this.rotatePalette();
+        this.setPalette();
     }
 
 
-    rotatePalette() {
+    setPalette() {
+
         let hueOffset = this.state.hueOffset;
         let defs = this.background.select('defs');
         let setColor = (el, index) => el.attr(
@@ -143,6 +145,10 @@ class MoireRoom extends React.Component {
             .each(function (datum, i) {
                 setColor(d3.select(this), i + 1);
             });
+    }
+
+    rotatePalette() {
+        this.background.select('g.rotate').attr('transform', `rotate(${this.state.hueOffset})`);
     }
 
     drawBackground() {
@@ -167,7 +173,9 @@ class MoireRoom extends React.Component {
 
         let fill = d => `url(#svgGradient${d})`;
         bg = bg.append("g")
-               .attr("transform", `scale(${(this.cx / this.cy).toFixed(2)}),1)`);
+               .attr('transform', `scale(1, ${Math.round(this.cy / this.cx * 100) / 100})`)
+               .append('g')
+               .attr('class', 'rotate');
         bg.selectAll('path').data(sectors).enter().append('path')
           .attr('class', 'fillSector')
           .attr("d", arc)
@@ -222,9 +230,12 @@ class MoireRoom extends React.Component {
 
 MoireRoom.propTypes = propTypes;
 MoireRoom.defaultProps = {
-    thickness: 2.25,
-    step: 6,
-    fgColor: '#000000'
+    thickness: 1,
+    step: 3,
+    fgColor: '#000000',
+    delay: 2000,
+    rotateSpeed: 0.1,
+    hueOffset: 0
 };
 
 export default MoireRoom;
