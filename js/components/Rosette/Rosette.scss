@@ -1,14 +1,14 @@
-@import "mixins";
+@import "../../../sass/_mixins";
 
 .rosette {
   @include absolute-center();
-  width: 40vh;
-  height: 40vh;
+  width: 50vh;
+  height: 50vh;
   z-index: 100;
 
   svg {
     position: absolute;
-    overflow: visible;
+    overflow: hidden;
     top: 0;
     left: 0;
     width: 100%;
@@ -17,13 +17,15 @@
     shape-rendering: geometricPrecision;
     transform: translateZ(0);
 
+    .outline {
+      mix-blend-mode: overlay;
+    }
+
     g.tr {
-      filter: url('#glow');
+      mix-blend-mode: screen;
       overflow: visible;
     }
 
-    .circle {
-    }
   }
 
 }

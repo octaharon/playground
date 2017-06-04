@@ -1,9 +1,9 @@
-require('../../sass/MoireRoom.scss');
+require('./MoireRoom.scss');
 
 import React from 'react';
-import d3 from '../d3-lib';
+import d3 from '../../d3-lib';
 import _ from 'underscore';
-import Timer from '../services/TimerService';
+import Timer from '../../services/TimerService';
 import PropTypes from 'prop-types';
 
 
@@ -78,7 +78,7 @@ class MoireRoom extends React.Component {
         this.drawForeground();
         this.fadeIn();
         this.timer = Timer.set(this.rotateColors.bind(this), 50);
-        d3.select('body').on('click', (event) => Timer.clear(this.timer));
+        //d3.select('body').on('click', (event) => Timer.clear(this.timer));
 
     }
 
@@ -98,7 +98,7 @@ class MoireRoom extends React.Component {
     drawPalette(radius = this.cy) {
         let sectorCount = this.state.sectorCount;
         let angleStep = Math.PI * 2 / sectorCount;
-        let r = this.cx/2;
+        let r = this.cx / 2;
 
         let startAngle = (i) => i * angleStep - Math.PI / 2;
         let endAngle = (i) => i * angleStep - Math.PI / 2 + angleStep;
@@ -181,7 +181,8 @@ class MoireRoom extends React.Component {
           .attr("d", arc)
           .attr("fill", fill)
           .attr("stroke-width", 0)
-          .attr("stroke", "none");
+          .attr("stroke", "none")
+          .attr('color-interpolation', 'linearRGB');
     }
 
     drawForeground() {
