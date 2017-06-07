@@ -1,0 +1,33 @@
+@mixin font-monospace {
+  font-family: 'Cutive Mono', monospace;
+}
+
+@mixin font-heading {
+  font-family: 'PT Serif Caption', serif;
+  font-style: normal;
+}
+
+@mixin font-heading-italic {
+  font-family: 'PT Serif Caption', serif;
+  font-style: italic;
+}
+
+@mixin font-main {
+  font-family: 'Play', sans-serif;
+  font-weight: 400;
+}
+
+@mixin font-bold {
+  font-family: 'Play', sans-serif;
+  font-weight: 700;
+}
+
+@mixin font-caption {
+  font-family: 'Rokkitt', serif;
+  font-weight: 300;
+}
+
+@mixin font-caption-bold {
+  font-family: 'Rokkitt', serif;
+  font-weight: 700
+}

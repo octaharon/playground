@@ -1,0 +1,77 @@
+@import "../../../sass/fonts";
+
+.slider-control {
+  padding: 0 20px;
+  box-sizing: content-box;
+
+  svg {
+    width: 100%;
+    overflow: visible;
+  }
+
+  .tickCaptions {
+    font-size: 0.8em;
+    @include font-bold;
+
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+    text {
+      position: relative;
+      cursor: pointer !important;
+      fill: white;
+    }
+  }
+
+  .tickLines {
+    .tick {
+      stroke: #FFF;
+      stroke-opacity: 0.8;
+      stroke-width: 1px;
+    }
+  }
+
+  .track,
+  .track-inset,
+  .track-select,
+  .track-overlay {
+    stroke-linecap: round;
+  }
+
+  .track {
+    stroke: #FFF;
+    stroke-opacity: 0.5;
+    stroke-width: 6px;
+  }
+
+  .track-inset {
+    stroke: #000;
+  }
+
+  .track-inset, .track-select {
+    stroke-width: 4px;
+  }
+
+  .track-overlay {
+    pointer-events: stroke;
+    stroke-width: 20px;
+    stroke: transparent;
+    cursor: pointer;
+    cursor: -moz-grab;
+    cursor: -webkit-grab;
+    cursor: grab;
+  }
+
+  .handle {
+    stroke: #fff;
+    stroke-opacity: 0.8;
+    stroke-width: 1.5px;
+  }
+
+  .handle, .track-select {
+    will-change: transform;
+    transform: translateZ(0);
+  }
+}

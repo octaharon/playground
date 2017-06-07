@@ -11,6 +11,7 @@ import Delay from 'react-delay';
 
 import MoireRoom from './components/MoireRoom/MoireRoom';
 import Rosette from './components/Rosette/Rosette';
+import Slider from './components/Slider/Slider';
 
 
 const loadDelay = 200;
@@ -28,7 +29,7 @@ class App extends React.Component {
         d3.select('body').transition()
           .delay(250)
           .duration(loadDelay)
-          .style('background-color', 'gray');
+          .style('background-color', '#333');
     }
 
 
@@ -39,7 +40,13 @@ class App extends React.Component {
                     <ReactSpinner />
                 </div>
                 {/*<MoireRoom delay={loadDelay}/>*/}
-                <Rosette id="flower-of-life" color="#FFFF00"/>
+                <div className="content-demo">
+                    <Rosette id="flower-of-life" color="#FFFF00"/>
+                </div>
+                <div className="controls">
+                    <Slider id="slider_1" min={1} max={60} ticks={6}>
+                    </Slider>
+                </div>
             </div>
         );
     }

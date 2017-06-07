@@ -1,10 +1,11 @@
 require('./MoireRoom.scss');
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import d3 from '../../d3-lib';
 import _ from 'underscore';
+import Utils from '../../utils';
 import Timer from '../../services/TimerService';
-import PropTypes from 'prop-types';
 
 
 const propTypes = {
@@ -38,15 +39,6 @@ class MoireRoom extends React.Component {
         this.container = container;
         this.cx = cx;
         this.cy = cy;
-    }
-
-    closestFraction(largerThan, dividesBy) {
-        let epsilon = 0.0001;
-        let division = largerThan / dividesBy;
-        let modulo = division - Math.floor(division);
-        if (modulo < epsilon)
-            return Math.round(Math.ceil(largerThan + dividesBy) / epsilon) * epsilon;
-        return Math.round(Math.ceil(division) * dividesBy / epsilon) * epsilon;
     }
 
 
@@ -134,8 +126,7 @@ class MoireRoom extends React.Component {
         let defs = this.background.select('defs');
         let setColor = (el, index) => el.attr(
             'stop-color',
-            d3.hsl((index * 360 / this.state.sectorCount + Math.floor(hueOffset)) % 360 + hueOffset - Math.floor(hueOffset), 1, 0.5)
-              .toString()
+            d3.interpolateRainbow(((index * 360 / this.state.sectorCount + Math.floor(hueOffset)) % 360 + hueOffset - Math.floor(hueOffset)) / 360)
         );
         defs.selectAll('stop.start')
             .each(function (datum, i) {
@@ -191,8 +182,8 @@ class MoireRoom extends React.Component {
             fgColor = d3.color(this.props.fgColor);
         let step = this.props.step;
         let thickness = this.props.thickness;
-        let cx = this.closestFraction(this.cx, step);
-        let cy = this.closestFraction(this.cy, step);
+        let cx = Utils.closestFraction(this.cx, step);
+        let cy = Utils.closestFraction(this.cy, step);
 
         this.foreground.selectAll('*').remove();
 

@@ -1,10 +1,10 @@
 require('./Rosette.scss');
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import d3 from '../../d3-lib';
 import _ from 'underscore';
 import Timer from '../../services/TimerService';
-import PropTypes from 'prop-types';
 
 
 const propTypes = {
@@ -91,7 +91,7 @@ class Rosette extends React.Component {
          .attr('height', size)
          .attr('viewBox', boundaryBox)
          .attr('preserveAspectRatio', alignmentString);
-        c.select('g.tr').style('filter', `url('${this.getGlowFilterId()}`);
+        c.select('g.tr').style('filter', `url('#${this.getGlowFilterId()}`);
         c.select('defs').select(`circle#${this.getCirclePrototypeId()}`)
          .attr('cx', 0)
          .attr('cy', 0)
@@ -251,7 +251,8 @@ class Rosette extends React.Component {
             <div className="rosette" id={this.props.id}>
                 <svg>
                     <filter id={this.getGlowFilterId()} x="-200%" y="-200%" width="400%" height="400%">
-                        <feGaussianBlur result="blurOut" in="SourceGraphic" stdDeviation="10"/>
+                        <feGaussianBlur result="blurOut" in="SourceGraphic"
+                                        stdDeviation={this.radiusConstant * this.props.glowFactor}/>
                         <feBlend in2="SourceGraphic" in="blurOut" mode="screen"/>
                     </filter>
                     <defs>
