@@ -2,19 +2,19 @@
 @import "fonts";
 
 body {
-  background: #FFF url('/img/photos/img1.jpg');
-  background-position: center center;
-  background-size: cover;
   @include font-main;
+  overflow: hidden;
   font-size: 16px;
   color: $textColor;
   min-width: 340px;
 }
 
-#wrapper {
+.wrapper {
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.7);
+  background: #FFF url('/img/photos/img1.jpg');
+  background-position: center center;
+  background-size: cover;
 }
 
 a {
@@ -35,22 +35,22 @@ a {
 }
 
 .content-demo, .controls {
-  top: 0;
+  top: 5%;
   box-sizing: content-box;
-  height: 100%;
+  height: 90%;
+  background: rgba(0, 0, 0, 0.7);
 }
 
 .content-demo {
   position: absolute;
-  width: 48vw;
+  width: 46vw;
   left: 2vw;
 }
 
 .controls {
   position: absolute;
   right: 2vw;
-  padding-top: 150px;
-  width: 48vw;
+  width: 46vw;
 
   .slider-control {
     width: 100%;

@@ -14,7 +14,7 @@ import Rosette from './components/Rosette/Rosette';
 import Slider from './components/Slider/Slider';
 
 
-const loadDelay = 200;
+const loadDelay = 2000;
 
 class App extends React.Component {
     constructor(props) {
@@ -26,10 +26,10 @@ class App extends React.Component {
 
     componentDidMount() {
         this.setState({loading: false});
-        /*d3.select('body').transition()
+        d3.select('body').transition()
           .delay(250)
           .duration(loadDelay)
-          .style('background-color', '#333');*/
+          .style('background-color', '#000');
     }
 
 
@@ -44,7 +44,7 @@ class App extends React.Component {
                     <Rosette id="flower-of-life" color="#FFFF00"/>
                 </div>
                 <div className="controls">
-                    <Slider id="slider_1" min={1} max={60} ticks={6}>
+                    <Slider id="slider_1" min={-20} max={60} ticks={7}>
                     </Slider>
                 </div>
             </div>

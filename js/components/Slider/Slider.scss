@@ -1,8 +1,9 @@
 @import "../../../sass/fonts";
 
 .slider-control {
+  margin: 20px 0px;
   padding: 0 20px;
-  box-sizing: content-box;
+  box-sizing: border-box;
 
   svg {
     width: 100%;

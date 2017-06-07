@@ -63,6 +63,10 @@ class Slider extends React.Component {
         return `slider-tick-${this.props.id}`;
     }
 
+    getValue() {
+        return this.state.value;
+    }
+
     //this method is redefined within this.redraw
     interpolateValue(value) {
         return value;
@@ -176,7 +180,7 @@ class Slider extends React.Component {
                              .attr("r", _self.props.handleRadius)
                              .style('filter', `url('#${this.getGlowFilterId()}`);
 
-        _self.updateValue(_self.props.value);
+        _self.updateValue(_self.props.value || _self.props.min);
 
     }
 
@@ -215,7 +219,6 @@ Slider.propTypes = propTypes;
 Slider.defaultProps = {
     min: 0,
     max: 100,
-    value: 0,
     size: 45,
     sliderOffset: 0.25,
     tickOffset: 0.42,

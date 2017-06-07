@@ -16,7 +16,7 @@ function getEntrySources(sources) {
 function getPlugins() {
     var plugs = [
         new ExtractTextPlugin({
-            filename: './web/style.css',
+            filename: 'style.css',
             allChunks: true
         })
     ];
@@ -31,14 +31,20 @@ function getPlugins() {
 }
 
 module.exports = {
+    devServer: {
+        contentBase: "./web",
+        compress: false,
+        port: 8080
+    },
+    devtool: 'inline-source-map',
     entry: {
         app: getEntrySources([
             './js/app.js'
         ])
     },
     output: {
-        publicPath: 'http://localhost:8080/',
-        filename: './web/[name].js'
+        path: __dirname + '/web',
+        filename: '[name].js'
     },
     module: {
         loaders: [
@@ -50,18 +56,29 @@ module.exports = {
                 exclude: /node_modules/
             },
             {
+                test: /\.(gif|eot|svg|ttf|woff(2)?)(\?v=\d+\.\d+\.\d+)?/,
+                loader: 'url-loader'
+            },
+            {
                 test: /\.(scss|css)$/,
                 loader: ExtractTextPlugin.extract({
                     fallback: 'style-loader',
                     use: [
-                        'css-loader',
-                        'sass-loader'
+                        {
+                            loader: 'css-loader',
+                            query: {
+                                minimize: !debug,
+                                sourceMap: debug
+                            }
+                        },
+                        {
+                            loader: 'sass-loader',
+                            query: {
+                                sourceMap: debug
+                            }
+                        }
                     ]
                 })
-            },
-            {
-                test: /\.(eot|svg|ttf|woff(2)?)(\?v=\d+\.\d+\.\d+)?/,
-                loader: 'url-loader'
             }
         ]
     },
