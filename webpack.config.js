@@ -36,7 +36,6 @@ module.exports = {
         compress: false,
         port: 8080
     },
-    devtool: 'inline-source-map',
     entry: {
         app: getEntrySources([
             './js/app.js'
@@ -87,4 +86,8 @@ module.exports = {
         extensions: ['.js', '.jsx']
     }
 };
+
+if (debug) {
+    module.exports.devtool = 'inline-source-map';
+}
 
