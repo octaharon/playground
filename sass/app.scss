@@ -2,11 +2,19 @@
 @import "fonts";
 
 body {
-  background: #FFF;
+  background: #FFF url('/img/photos/img1.jpg');
+  background-position: center center;
+  background-size: cover;
   @include font-main;
   font-size: 16px;
   color: $textColor;
   min-width: 340px;
+}
+
+#wrapper {
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.7);
 }
 
 a {

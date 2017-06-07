@@ -26,10 +26,10 @@ class App extends React.Component {
 
     componentDidMount() {
         this.setState({loading: false});
-        d3.select('body').transition()
+        /*d3.select('body').transition()
           .delay(250)
           .duration(loadDelay)
-          .style('background-color', '#333');
+          .style('background-color', '#333');*/
     }
 
 
