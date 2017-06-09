@@ -11,7 +11,7 @@
   }
 
   .tickCaptions {
-    font-size: 0.8em;
+    font-size: 0.85em;
     @include font-bold;
 
     -webkit-user-select: none;
@@ -22,7 +22,11 @@
     text {
       position: relative;
       cursor: pointer !important;
-      fill: white;
+      fill: #CCC;
+
+      &:hover {
+        fill: #FFF;
+      }
     }
   }
 

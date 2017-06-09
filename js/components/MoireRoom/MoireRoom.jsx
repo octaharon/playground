@@ -226,7 +226,7 @@ MoireRoom.defaultProps = {
     step: 3,
     fgColor: '#000000',
     delay: 2000,
-    rotateSpeed: 0.1,
+    rotateSpeed: 0.15,
     hueOffset: 0
 };
 

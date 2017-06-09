@@ -14,6 +14,7 @@ const propTypes = {
     min: PropTypes.number.isRequired,
     max: PropTypes.number.isRequired,
     value: PropTypes.number,
+    vertical: PropTypes.bool,
     sliderOffset: PropTypes.number,
     ticks: PropTypes.number,
     tickSuffix: PropTypes.string,
@@ -44,7 +45,16 @@ class Slider extends React.Component {
     }
 
     shouldComponentUpdate(nextProps, nextState) {
-        return (nextProps != this.props);
+        if (nextProps.value) {
+            let value = nextProps.value;
+            delete nextProps['value'];
+            if (value != this.state.value) {
+                this.updateValue(value);
+                return false;
+            }
+
+        }
+        return !_.isMatch(this.props, nextProps);
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -220,6 +230,7 @@ Slider.defaultProps = {
     min: 0,
     max: 100,
     size: 45,
+    vertical: true,
     sliderOffset: 0.25,
     tickOffset: 0.42,
     tickSize: 5,

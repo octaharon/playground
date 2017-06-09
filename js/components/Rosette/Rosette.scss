@@ -1,10 +1,6 @@
 @import "../../../sass/_mixins";
 
 .rosette {
-  @include absolute-center();
-  width: 50vh;
-  height: 50vh;
-  z-index: 100;
 
   svg {
     position: absolute;

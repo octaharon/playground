@@ -33,7 +33,7 @@ function getPlugins() {
 module.exports = {
     devServer: {
         contentBase: "./web",
-        compress: false,
+        compress: true,
         port: 8080
     },
     entry: {
@@ -88,6 +88,6 @@ module.exports = {
 };
 
 if (debug) {
-    module.exports.devtool = 'inline-source-map';
+    module.exports.devtool = 'cheap-source-map';
 }
 

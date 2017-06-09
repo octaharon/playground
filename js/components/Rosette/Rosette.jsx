@@ -233,13 +233,20 @@ class Rosette extends React.Component {
 
     componentDidMount() {
         this.container = d3.select(`.rosette#${this.props.id}`).select('svg');
+        this.setState({
+            sequence: this.generateSequence()
+        }, this.redraw);
     }
 
     shouldComponentUpdate(nextProps, nextState) {
-        return (nextProps != this.props);
+        if (this.props == nextProps)
+            return false;
+        return !(_.isMatch(this.props, nextProps));
     }
 
     componentDidUpdate(prevProps, prevState) {
+        if (_.isMatch(this.props, prevProps))
+            return true;
         this.setState({
             sequence: this.generateSequence()
         }, this.redraw);
@@ -267,7 +274,7 @@ class Rosette extends React.Component {
                               width={this.radiusConstant * this.props.cropInner}
                               height={this.radiusConstant * this.props.cropInner}>
                             <rect x="-100%" y="-100%" width="200%" height="200%" fill="white"/>
-                            <use className="crop-inner-circle" fill="black"/>
+                            <use xlinkHref={this.getInnerOutlineId()} className="crop-inner-circle" fill="black"/>
                         </mask>
                         <circle id={this.getCirclePrototypeId()} cx="0" cy="0" r={this.radiusConstant}>
                         </circle>
