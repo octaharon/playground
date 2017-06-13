@@ -3,10 +3,16 @@
 <head>
     <link href="https://fonts.googleapis.com/css?family=Cutive+Mono|PT+Serif+Caption:400,400i|Play:400,700|Rokkitt:300,700&amp;subset=cyrillic,latin-ext"
           rel="stylesheet">
+    <link rel="icon" href="favicon.ico?v=2"/>
     <title>My Sample App</title>
     <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
+<svg id="filterFallbackLibrary" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="display:none">
+    <filter id="global-filter-blur">
+        <feGaussianBlur in="sourceGraphic" stdDeviation="8"></feGaussianBlur>
+    </filter>
+</svg>
 <div id="app">
 
 </div>
