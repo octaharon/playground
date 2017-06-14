@@ -294,7 +294,7 @@ Rosette.defaultProps = {
     angleStep: 90,
     maxRow: 5,
     minRow: 1,
-    rotateSpeed: 0.15,
+    rotateSpeed: 0.75,
     color: '#FFFFFF',
     thicknessFactor: 0.025,
     glowFactor: 0.5,

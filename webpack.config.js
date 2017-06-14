@@ -38,6 +38,7 @@ module.exports = {
     },
     entry: {
         app: getEntrySources([
+            'babel-polyfill',
             './js/app.js'
         ])
     },

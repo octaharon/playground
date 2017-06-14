@@ -1,58 +1,89 @@
 import _ from 'underscore';
-
+import Utils from '../utils';
 
 /**
- * This class provides single-pipeline timer with simultaneous iterations. Maximum repetition frequency is 100Hz
+ * This class provides single-pipeline self-adjusting timer bound to animation frames. Maximum repetition frequency is 100Hz
+ * This timer is not ticking while the browser tab is inactive
+ * All bound callbacks are happening simultaneously, as well as page updates
  */
 class TimerService {
     constructor() {
-        this.timers = {};
-        this.timerValue = 0;
-        this.internalInterval = 10;
-        this.maxInterval = 0;
-        this.set = this.set.bind(this);
-        this.clear = this.clear.bind(this);
-        setInterval(this.rotate.bind(this), this.internalInterval);
+        let fps = 100;
+        this._timers = {};
+        this._timerValue = 0;
+        this._internalInterval = 1000 / fps;
+        this._maxInterval = 0;
+        this._timerStart = Date.now();
+        for (let method of ['set', 'clear', '_rotate', '_callbacks'])
+            this[method] = this[method].bind(this);
+        setTimeout(this._rotate, Math.round(this._internalInterval));
     }
 
-    setMaxInterval() {
-        return this.maxInterval = _.max(_.pluck(this.timers, 'interval'));
+    _setMaxInterval() {
+        return this._maxInterval = _.max(_.pluck(this._timers, 'interval'));
     }
+
+    _rotate() {
+        requestAnimationFrame(function () {
+            this._timerValue += this._internalInterval;
+            let diff = (Date.now() - this._timerStart) - this._timerValue;
+            this._callbacks();
+            setTimeout(this._rotate, Math.max(Math.round(this._internalInterval - diff), 0));
+
+            if (this._timerValue > this._maxInterval) {
+                this._timerValue -= this._maxInterval;
+                this._timerStart = Date.now() - this._timerValue;
+            }
+        }.bind(this));
+    }
+
+    _callbacks() {
+        let toCall = [];
+        let epsilon = 0.01;
+        _.each(this._timers, function (timer) {
+            if (Utils.closestFraction(this._timerValue - timer.interval / 10, timer.interval) - this._timerValue < epsilon)
+                toCall.push(timer.callback);
+        }.bind(this));
+        if (toCall.length)
+            toCall.forEach(f => f.call());
+    }
+
 
     /**
-     *
+     * Public methods
+     */
+    /**
      * @param interval multiple of 10
      * @param callback
+     * @return timer_id|false
      */
     set(callback, interval) {
         if (!(callback instanceof Function))
             return false;
         let uniq = 'timer_' + (new Date()).getTime();
-        this.timers[uniq] = {
+        this._timers[uniq] = {
             callback,
-            interval: Math.ceil(interval / this.internalInterval) * this.internalInterval,
-            offset: this.timerValue
+            interval: Utils.closestFraction(interval - this._internalInterval / 10, this._internalInterval),
+            offset: this._timerValue
         };
-        this.setMaxInterval();
+        this._setMaxInterval();
         return uniq;
     }
 
 
-    rotate() {
-        this.timerValue += this.internalInterval;
-        if (this.timerValue > this.maxInterval)
-            this.timerValue = 0;
-        _.each(this.timers, function (timer) {
-            if ((this.timerValue - timer.offset) % timer.interval)
-                timer.callback();
-        }.bind(this));
-    }
-
-    clear(id) {
-        if (this.timers[id] === undefined)
+    /**
+     * @param timer_id|true for all timers clearance
+     * @returns {boolean} true if timer has been cleared
+     */
+    clear(timer_id) {
+        if (timer_id === true) {
+            Object.keys(this._timers).forEach((id) => (delete this._timers[id]));
+            return true;
+        }
+        if (this._timers[timer_id] === undefined)
             return false;
-        delete this.timers[id];
-        this.setMaxInterval();
+        delete this._timers[timer_id];
+        this._setMaxInterval();
         return true;
     }
 }

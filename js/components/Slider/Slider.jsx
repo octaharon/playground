@@ -87,12 +87,14 @@ class Slider extends React.Component {
     }
 
     updateView(value) {
-        let percent = this.interpolateValue(value);
-        let color = this.interpolateColor(percent / 100);
-        this.handle.attr("cx", `${percent}%`).attr('fill', color);
-        this.container.select('.track-select').attr('x2', `${percent}%`);
-        if (this.props.onChange instanceof Function)
-            this.props.onChange(value);
+        requestAnimationFrame(function () {
+            let percent = this.interpolateValue(value);
+            let color = this.interpolateColor(percent / 100);
+            this.handle.attr("cx", `${percent}%`).attr('fill', color);
+            this.container.select('.track-select').attr('x2', `${percent}%`);
+            if (this.props.onChange instanceof Function)
+                this.props.onChange(value);
+        }.bind(this));
     }
 
 
@@ -158,6 +160,7 @@ class Slider extends React.Component {
                       })
                       .on("start drag", function () {
                           let x = d3_live.event.x / svg.select('.slider').node().getBBox().width;
+                          d3_live.event.sourceEvent.stopPropagation();
                           _self.updateValue(_self.interpolateValue.invert(x * 100));
                       }));
 

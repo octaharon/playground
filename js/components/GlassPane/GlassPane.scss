@@ -1,13 +1,53 @@
+@import "../../../sass/mixins";
+
 .glass-pane {
   position: relative;
-  overflow: hidden;
   z-index: 100;
+  transform-style: flat;
 
   svg.glass-pane__background {
+    @include absolute-cover;
     overflow: visible;
-    width: 100%;
-    height: 100%;
-    z-index: 100;
+    z-index: 101;
+    background-size: 100%
+  }
+
+  .glass-pane__blur {
+    overflow: hidden;
+    @include absolute-cover;
+  }
+
+  .glass-pane__body-shadow {
+    mix-blend-mode: multiply;
+    background-blend-mode: multiply;
+  }
+
+  .glass-pane__blur-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transition: opacity 3s ease-out;
+    opacity: 0;
+    &.fade-in {
+      opacity: 1;
+    }
+    -moz-filter: url('#global-filter-blur');
+    -o-filter: url('#global-filter-blur');
+    -ms-filter: url('#global-filter-blur');
+    -webkit-filter: blur(7px);
+    filter: url('#global-filter-blur');
+    filter: blur(7px);
+    filter: progid:DXImageTransform.Microsoft.Blur(PixelRadius='7');
+
+  }
+  @-moz-document url-prefix() {
+    .glass-pane__body {
+      filter: none !important;
+    }
+  }
+
+  .glass-pane__border, .glass-pane__noise {
+    transition: all 0.5s linear;
   }
 
   .glass-pane__border {
@@ -15,13 +55,13 @@
   }
 
   .glass-pane__noise {
-    opacity: 0.25;
+    opacity: 0.35;
     mix-blend-mode: soft-light;
   }
 
   .glass-pane__body-darker {
     mix-blend-mode: multiply;
-    opacity: 0.2;
+    opacity: 0.25;
   }
 
   .glass-pane__gloss {
@@ -31,17 +71,13 @@
 
   .glass-pane__body-specular {
     mix-blend-mode: screen;
-    opacity: 0.16;
+    opacity: 0.20;
   }
 
   .glass-pane__content-holder {
-    z-index: 101;
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    padding: 20px 20px 20px 20px;
+    z-index: 102;
+    @include absolute-cover;
+    padding: 15px;
     box-sizing: border-box;
 
     .glass-pane__content-wrapper {
@@ -49,11 +85,113 @@
       overflow: hidden;
       width: 100%;
       height: 100%;
+      box-sizing: border-box;
 
       .glass-pane__content {
         position: absolute;
+        padding-top: 20px;
+        padding-bottom: 20px;
+        will-change: transform;
+        transition: transform 0.1s ease-in;
+
+        p:first-child {
+          margin-top: 0;
+        }
       }
     }
+
+    $scrollbar-shadow-settings: 0px 0px 1px rgba(255, 255, 255, 0.3);
+    &.has-scroll {
+      padding-right: 20px;
+
+      .glass-pane__content-scroll {
+
+        .glass-pane__content-scroll-handle {
+          filter: blur(1px) opacity(0.8);
+        }
+
+        .glass-pane__content-scroll-bar {
+          transition: all 0.25s ease-in-out;
+          background-color: rgba(50, 50, 50, 0.2);
+          filter: opacity(0.8);
+
+          &:hover, &.dragging {
+            -webkit-box-shadow: $scrollbar-shadow-settings;
+            -moz-box-shadow: $scrollbar-shadow-settings;
+            box-shadow: $scrollbar-shadow-settings;
+            background-color: rgba(60, 60, 60, 1);
+            border-color: rgba(170, 170, 170, 1);
+            border-width: 2px;
+            filter: opacity(1);
+
+          }
+
+          &:hover {
+            .glass-pane__content-scroll-handle {
+              filter: blur(0px) opacity(1);
+            }
+          }
+          &.dragging {
+            .glass-pane__content-scroll-handle {
+              border-color: #AAA;
+              filter: blur(0px) opacity(1) !important;
+            }
+          }
+        }
+      }
+    }
+
+    .glass-pane__content-scroll {
+      position: absolute;
+      z-index: 110;
+      overflow: visible;
+      overflow-x: hidden;
+      right: 13px;
+      top: 0;
+      height: 100%;
+      padding-top: 35px;
+      padding-bottom: 35px;
+      box-sizing: border-box;
+      width: 7px;
+
+      .glass-pane__content-scroll-bar {
+        width: 2px;
+        position: relative;
+        left: 3px;
+        top: 0;
+        cursor: pointer;
+        height: 100%;
+        transition: all 1.8s linear;
+        filter: opacity(0);
+        background-color: rgba(40, 40, 40, 0);
+        @include gradient-vertical-three-colors(rgba(200, 200, 200, 0), rgba(100, 100, 100, 0.8), 50%, rgba(200, 200, 200, 0));
+        border-radius: 4px;
+        border-width: 1px;
+        border-color: rgba(170, 170, 170, 0);
+
+        .glass-pane__content-scroll-handle {
+          will-change: top, opacity;
+          position: absolute;
+          top: 45%;
+          height: 10%;
+          width: 5px;
+          left: -3px;
+          cursor: pointer;
+          cursor: -moz-grab;
+          cursor: -webkit-grab;
+          cursor: grab;
+          mix-blend-mode: screen;
+          box-sizing: content-box;
+          @include gradient-horizontal(#777, #CCC);
+          border: 1px #222 solid;
+          transition: all 0.1s ease-in;
+          border-radius: 5px;
+
+        }
+
+      }
+    }
+
   }
 
 }

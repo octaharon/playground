@@ -31,3 +31,7 @@
   font-family: 'Rokkitt', serif;
   font-weight: 700
 }
+
+.heading {
+  @include font-heading;
+}
