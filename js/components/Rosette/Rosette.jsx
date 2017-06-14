@@ -38,7 +38,7 @@ class Rosette extends React.Component {
 
         this.__radiusConstant = 100;
 
-        for (let method of ['_draw', '_redraw', '_prepare', '_setTimer', '_setTransform','_rotateMe'])
+        for (let method of ['_draw', '_redraw', '_prepare', '_setTimer', '_setTransform', '_rotateMe'])
             this[method] = this[method].bind(this);
 
     }
@@ -235,6 +235,11 @@ class Rosette extends React.Component {
         this.setState({
             sequence: this._generateSequence()
         }, this._redraw);
+    }
+
+    componentWillUnmount() {
+        this.__timer.stop();
+        this.__timer = null;
     }
 
     shouldComponentUpdate(nextProps, nextState) {

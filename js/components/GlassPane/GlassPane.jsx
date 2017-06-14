@@ -432,6 +432,12 @@ class GlassPane extends React.Component {
             this._redraw();
     }
 
+    componentWillUnmount() {
+        this.__scrollTimer.stop();
+        this.__dragTimer.stop();
+        this.__scrollTimer = this.__dragTimer = null;
+    }
+
 
     componendDidUpdate() {
         console.log('Oops I did it again');
