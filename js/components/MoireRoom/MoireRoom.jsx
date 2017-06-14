@@ -69,13 +69,9 @@ class MoireRoom extends React.Component {
         this.drawBackground();
         this.drawForeground();
         this.fadeIn();
-        this.timer = Timer.set(this.rotateColors.bind(this), 50);
+        this.__timer = Timer.set(this.rotateColors.bind(this), 50);
         //d3.select('body').on('click', (event) => Timer.clear(this.timer));
 
-    }
-
-    fitInBoundaries(value, min, max) {
-        return (value < min) ? min : ((value > max) ? max : value);
     }
 
     rotateColors() {
@@ -100,10 +96,10 @@ class MoireRoom extends React.Component {
         defs.selectAll('linearGradient').data(_.range(0, sectorCount)).enter().append("linearGradient")
             .attr("id", (i) => `svgGradient${i}`)
             .attr("gradientUnits", "userSpaceOnUse")
-            .attr("x1", (i) => this.fitInBoundaries(r * Math.cos(startAngle(i)), -this.cx, this.cx))
-            .attr("x2", (i) => this.fitInBoundaries(r * Math.cos(endAngle(i)), -this.cx, this.cx))
-            .attr("y1", (i) => this.fitInBoundaries(r * Math.sin(startAngle(i)), -this.cy, this.cy))
-            .attr("y2", (i) => this.fitInBoundaries(r * Math.sin(endAngle(i)), -this.cy, this.cy))
+            .attr("x1", (i) => Utils.fitInRange(r * Math.cos(startAngle(i)), -this.cx, this.cx))
+            .attr("x2", (i) => Utils.fitInRange(r * Math.cos(endAngle(i)), -this.cx, this.cx))
+            .attr("y1", (i) => Utils.fitInRange(r * Math.sin(startAngle(i)), -this.cy, this.cy))
+            .attr("y2", (i) => Utils.fitInRange(r * Math.sin(endAngle(i)), -this.cy, this.cy))
             .each(function () {
                 let node = d3.select(this);
                 node.append("stop")

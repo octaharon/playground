@@ -20,6 +20,25 @@ class Utilities {
         this._resizeHandler = optimizedResize;
     }
 
+    /**
+     * crop the value to given range
+     * @param value float|int
+     * @param from float|int
+     * @param to float|int
+     * @returns {Number|*}
+     */
+    fitInRange(value, from, to) {
+        value = parseFloat(value);
+        from = parseFloat(from);
+        to = parseFloat(to);
+        if (from > to) {
+            from -= to;
+            to += from;
+            from = to - from;
+        }
+        return (value < from) ? from : ((value > to) ? to : value);
+    }
+
     closestFraction(largerThan, dividesBy) {
         let epsilon = 0.0001;
         let division = largerThan / dividesBy;

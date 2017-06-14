@@ -15,7 +15,7 @@ const propTypes = {
     color: PropTypes.string,
     thicknessFactor: PropTypes.number,
     glowFactor: PropTypes.number,
-    rotateSpeed: PropTypes.number,
+    rotateSpeed: PropTypes.number, //radians per second
     outlineOuter: PropTypes.bool,
     outlineInner: PropTypes.bool,
     cropOuter: PropTypes.number,
@@ -36,44 +36,44 @@ class Rosette extends React.Component {
             sequence: []
         };
 
-        this.radiusConstant = 100;
+        this.__radiusConstant = 100;
 
-        for (let method of ['draw', 'redraw', 'prepare', 'setTimer', 'setTransform'])
+        for (let method of ['_draw', '_redraw', '_prepare', '_setTimer', '_setTransform','_rotateMe'])
             this[method] = this[method].bind(this);
 
     }
 
-    getOuterClipPathId() {
+    _getOuterClipPathId() {
         return `outer-clip-${this.props.id}`;
     }
 
-    getOuterOutlineId() {
+    _getOuterOutlineId() {
         return `outer-outline-${this.props.id}`;
     }
 
-    getInnerClipPathId() {
+    _getInnerClipPathId() {
         return `inner-clip-${this.props.id}`;
     }
 
-    getInnerOutlineId() {
+    _getInnerOutlineId() {
         return `inner-outline-${this.props.id}`;
     }
 
-    getCirclePrototypeId() {
+    _getCirclePrototypeId() {
         return `circle-prototype-${this.props.id}`;
     }
 
-    getGlowFilterId() {
+    _getGlowFilterId() {
         return `glow-filter-${this.props.id}`;
     }
 
-    prepare() {
-        let c = this.container;
+    _prepare() {
+        let c = this.__container;
         let padding = 0;
-        let thickness = this.props.thicknessFactor * this.radiusConstant;
-        let r = this.maxRadius / this.state.scale + thickness;
-        let clipOuterRadius = this.radiusConstant * this.props.cropOuter;
-        let clipInnerRadius = this.radiusConstant * this.props.cropInner;
+        let thickness = this.props.thicknessFactor * this.__radiusConstant;
+        let r = this.__maxRadius / this.state.scale + thickness;
+        let clipOuterRadius = this.__radiusConstant * this.props.cropOuter;
+        let clipInnerRadius = this.__radiusConstant * this.props.cropInner;
         let color = this.props.color;
         let boundary = Math.round((this.props.cropOuter ? Math.min(r, clipOuterRadius) : r) + padding);
         if (this.props.outlineOuter)
@@ -91,14 +91,14 @@ class Rosette extends React.Component {
          .attr('height', size)
          .attr('viewBox', boundaryBox)
          .attr('preserveAspectRatio', alignmentString);
-        c.select('g.tr').style('filter', `url('#${this.getGlowFilterId()}`);
-        c.select('defs').select(`circle#${this.getCirclePrototypeId()}`)
+        c.select('g.tr').style('filter', `url('#${this._getGlowFilterId()}`);
+        c.select('defs').select(`circle#${this._getCirclePrototypeId()}`)
          .attr('cx', 0)
          .attr('cy', 0)
-         .attr('r', this.radiusConstant)
+         .attr('r', this.__radiusConstant)
          .attr("fill", "none")
          .attr("stroke-width", thickness);
-        c.select('defs').select(`mask#${this.getInnerClipPathId()}`)
+        c.select('defs').select(`mask#${this._getInnerClipPathId()}`)
          .attr('width', size)
          .attr('height', size)
          .attr('x', -boundary)
@@ -106,10 +106,10 @@ class Rosette extends React.Component {
          .select('use.crop-inner-circle')
          .attr('r', clipInnerRadius)
          .attr('fill', 'black')
-         .attr('xlink:href', `#${this.getInnerOutlineId()}`);
-        c.select('defs').select(`clipPath#${this.getOuterClipPathId()}`).select('circle')
+         .attr('xlink:href', `#${this._getInnerOutlineId()}`);
+        c.select('defs').select(`clipPath#${this._getOuterClipPathId()}`).select('circle')
          .attr('r', clipOuterRadius);
-        c.select(`filter#${this.getGlowFilterId()}`).select('feGaussianBlur')
+        c.select(`filter#${this._getGlowFilterId()}`).select('feGaussianBlur')
          .attr('stdDeviation', thickness * this.props.glowFactor);
         c.selectAll('use.outline').remove();
 
@@ -118,7 +118,7 @@ class Rosette extends React.Component {
              .attr('class', 'outline')
              .attr('x', 0)
              .attr('y', 0)
-             .attr('xlink:href', `#${this.getOuterOutlineId()}`)
+             .attr('xlink:href', `#${this._getOuterOutlineId()}`)
              .attr("fill", "none")
              .attr("stroke-width", thickness)
              .attr("stroke", color);
@@ -128,14 +128,14 @@ class Rosette extends React.Component {
              .attr('class', 'outline')
              .attr('x', 0)
              .attr('y', 0)
-             .attr('xlink:href', `#${this.getInnerOutlineId()}`)
+             .attr('xlink:href', `#${this._getInnerOutlineId()}`)
              .attr("fill", "none")
              .attr("stroke-width", thickness)
              .attr("stroke", color);
         }
     }
 
-    generateSequence() {
+    _generateSequence() {
         let sequence = [{
             cx: 0,
             cy: 0,
@@ -143,7 +143,7 @@ class Rosette extends React.Component {
         }];
         let precision = 2;
         let step = Math.min(360, Math.max(0, Math.round(this.props.angleStep)));
-        let radius = this.props.radiusFactor * this.radiusConstant;
+        let radius = this.props.radiusFactor * this.__radiusConstant;
         let round = (v) => Math.round(Math.pow(10, precision) * v) / Math.pow(10, precision);
         let distance = (c) => Math.sqrt(c.cx * c.cx + c.cy * c.cy);
         for (let i = 0; i < this.props.maxRow; i++) {
@@ -173,69 +173,68 @@ class Rosette extends React.Component {
             return item;
         });
         let distantItem = _.max(sequence, (item) => Math.max(item.cx, item.cy));
-        this.maxRadius = (Math.max(distantItem.cx, distantItem.cy)
-            + this.radiusConstant * (1 + this.props.thicknessFactor))
+        this.__maxRadius = (Math.max(distantItem.cx, distantItem.cy)
+            + this.__radiusConstant * (1 + this.props.thicknessFactor))
             * this.state.scale;
-        this.prepare();
+        this._prepare();
         return _.sortBy(sequence, (item) => item.row);
     }
 
-    setTransform() {
-        this.container.select('g')
-            .attr('transform', this.getTransform())
-            .attr('clip-path', this.props.cropOuter ? `url(#${this.getOuterClipPathId()})` : "none")
-            .attr('mask', this.props.cropInner ? `url(#${this.getInnerClipPathId()})` : "none");
+    _setTransform() {
+        this.__container.select('g')
+            .attr('transform', this._getTransform())
+            .attr('clip-path', this.props.cropOuter ? `url(#${this._getOuterClipPathId()})` : "none")
+            .attr('mask', this.props.cropInner ? `url(#${this._getInnerClipPathId()})` : "none");
     }
 
-    draw() {
-        let c = this.container;
-        c = c.select('g').attr('transform', this.getTransform());
+    _draw() {
+        let c = this.__container;
+        c = c.select('g').attr('transform', this._getTransform());
         let circles = c.selectAll('use').data(this.state.sequence);
         circles.enter().append('use')
                .merge(circles)
                .attr('x', d => d.cx)
                .attr('y', d => d.cy)
-               .attr('xlink:href', `#${this.getCirclePrototypeId()}`)
+               .attr('xlink:href', `#${this._getCirclePrototypeId()}`)
                .attr('stroke', this.props.color);
         circles.exit().remove();
     }
 
-    setTimer() {
+    _setTimer() {
         if (this.props.rotateSpeed != 0) {
-            if (!this.timer)
-                this.timer = Timer.set(this.rotateMe.bind(this), 20);
+            this.__timer.restart(this._rotateMe)
         }
-        else if (this.timer) {
-            Timer.clear(this.timer);
-            this.timer = null;
+        else {
+            this.__timer.stop();
         }
     }
 
-    redraw() {
-        this.setTimer();
-        this.setTransform();
-        this.draw();
+    _redraw() {
+        this._setTimer();
+        this._setTransform();
+        this._draw();
     }
 
-    rotateMe() {
+    _rotateMe(elapsed) {
         let angle = this.state.rotation + this.props.rotateSpeed;
         if (angle > 360)
             angle -= 360;
         this.setState({
             rotation: angle
-        }, this.setTransform);
+        }, this._setTransform);
     }
 
-    getTransform() {
+    _getTransform() {
         return `scale(${this.state.scale}) rotate(${this.state.rotation})`;
     }
 
 
     componentDidMount() {
-        this.container = d3.select(`.rosette#${this.props.id}`).select('svg');
+        this.__container = d3.select(`.rosette#${this.props.id}`).select('svg');
+        this.__timer = d3.timer(this._rotateMe);
         this.setState({
-            sequence: this.generateSequence()
-        }, this.redraw);
+            sequence: this._generateSequence()
+        }, this._redraw);
     }
 
     shouldComponentUpdate(nextProps, nextState) {
@@ -248,8 +247,8 @@ class Rosette extends React.Component {
         if (_.isMatch(this.props, prevProps))
             return true;
         this.setState({
-            sequence: this.generateSequence()
-        }, this.redraw);
+            sequence: this._generateSequence()
+        }, this._redraw);
     }
 
 
@@ -257,29 +256,29 @@ class Rosette extends React.Component {
         return (
             <div className="rosette" id={this.props.id}>
                 <svg>
-                    <filter id={this.getGlowFilterId()} x="-200%" y="-200%" width="400%" height="400%">
+                    <filter id={this._getGlowFilterId()} x="-200%" y="-200%" width="400%" height="400%">
                         <feGaussianBlur result="blurOut" in="SourceGraphic"
-                                        stdDeviation={this.radiusConstant * this.props.glowFactor}/>
+                                        stdDeviation={this.__radiusConstant * this.props.glowFactor}/>
                         <feBlend in2="SourceGraphic" in="blurOut" mode="screen"/>
                     </filter>
                     <defs>
-                        <clipPath id={this.getOuterClipPathId()}>
-                            <circle id={this.getOuterOutlineId()} x="0" y="0"
-                                    r={this.radiusConstant * this.props.cropOuter}/>
+                        <clipPath id={this._getOuterClipPathId()}>
+                            <circle id={this._getOuterOutlineId()} x="0" y="0"
+                                    r={this.__radiusConstant * this.props.cropOuter}/>
                         </clipPath>
-                        <circle id={this.getInnerOutlineId()} x="0" y="0"
-                                r={this.radiusConstant * this.props.cropInner}/>
-                        <mask id={this.getInnerClipPathId()} maskUnits="userSpaceOnUse"
+                        <circle id={this._getInnerOutlineId()} x="0" y="0"
+                                r={this.__radiusConstant * this.props.cropInner}/>
+                        <mask id={this._getInnerClipPathId()} maskUnits="userSpaceOnUse"
                               x="0" y="0"
-                              width={this.radiusConstant * this.props.cropInner}
-                              height={this.radiusConstant * this.props.cropInner}>
+                              width={this.__radiusConstant * this.props.cropInner}
+                              height={this.__radiusConstant * this.props.cropInner}>
                             <rect x="-100%" y="-100%" width="200%" height="200%" fill="white"/>
-                            <use xlinkHref={this.getInnerOutlineId()} className="crop-inner-circle" fill="black"/>
+                            <use xlinkHref={this._getInnerOutlineId()} className="crop-inner-circle" fill="black"/>
                         </mask>
-                        <circle id={this.getCirclePrototypeId()} cx="0" cy="0" r={this.radiusConstant}>
+                        <circle id={this._getCirclePrototypeId()} cx="0" cy="0" r={this.__radiusConstant}>
                         </circle>
                     </defs>
-                    <g className="tr" transform={this.getTransform()}>
+                    <g className="tr" transform={this._getTransform()}>
 
                     </g>
                 </svg>

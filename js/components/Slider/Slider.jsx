@@ -161,6 +161,7 @@ class Slider extends React.Component {
                       .on("start drag", function () {
                           let x = d3_live.event.x / svg.select('.slider').node().getBBox().width;
                           d3_live.event.sourceEvent.stopPropagation();
+                          d3_live.event.sourceEvent.preventDefault();
                           _self.updateValue(_self.interpolateValue.invert(x * 100));
                       }));
 

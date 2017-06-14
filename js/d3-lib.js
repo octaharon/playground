@@ -5,7 +5,8 @@ import * as d3selection from 'd3-selection';
 import * as d3scale from 'd3-scale';
 import * as d3ease from 'd3-ease';
 import * as d3drag from 'd3-drag';
+import * as d3timer from 'd3-timer';
 
 let d3 = {};
-Object.assign(d3, d3shape, d3color, d3transition, d3selection, d3scale, d3ease, d3drag);
+Object.assign(d3, d3shape, d3color, d3transition, d3selection, d3scale, d3ease, d3drag, d3timer);
 export default d3;

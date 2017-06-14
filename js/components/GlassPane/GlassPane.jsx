@@ -28,7 +28,8 @@ let propTypes =
         fadeTop: PropTypes.number,
         fadeBottom: PropTypes.number,
         hasTransition: PropTypes.bool,
-        scroll: PropTypes.bool
+        scroll: PropTypes.bool,
+        scrollDecay: PropTypes.number
     };
 
 class GlassPane extends React.Component {
@@ -38,6 +39,7 @@ class GlassPane extends React.Component {
         let height = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
         this.state = {
             scrollOffset: 0,
+            scrollOffsetTarget: null,
             init: true
         };
         this.internalResolution = {width, height, size: Math.max(width, height)};
@@ -50,6 +52,9 @@ class GlassPane extends React.Component {
             '_getScrollPosition',
             '_getScrollHandlePosition',
             '_updateScroll',
+            '_tweenScroll',
+            '_scrollAnimate',
+            '_measureDragSpeed',
             '_onScroll',
             '_setDOMCache'
         ].forEach((method) => this[method] = this[method].bind(this));
@@ -136,25 +141,25 @@ class GlassPane extends React.Component {
     }
 
     _getScrollPosition() {
-        if (!this.scrollInterpolate)
+        if (!this.__scrollInterpolate)
             return 0;
-        return this.scrollInterpolate(Math.max(0, Math.min(1, this.state.scrollOffset)));
+        return this.__scrollInterpolate(Math.max(0, Math.min(1, this.state.scrollOffset)));
     }
 
     _getScrollHandlePosition() {
-        if (!this.scrollHandleOffset)
+        if (!this.__scrollHandleOffset)
             return 0;
-        return this.scrollHandleOffset(Math.max(0, Math.min(1, this.state.scrollOffset)));
+        return this.__scrollHandleOffset(Math.max(0, Math.min(1, this.state.scrollOffset)));
     }
 
     _redraw() {
         if (this.state.init) {
             this.setState({init: false}, function () {
-                d3.select(this.container)
+                d3.select(this.__container)
                   .selectAll('.glass-pane__border, .glass-pane__noise')
                   .style('transform-origin', '50% 50% 0');
                 if (this.props.hasTransition)
-                    d3.select(this.container.parentNode).on(Utils.getAllTransitionEvents(), null);
+                    d3.select(this.__container.parentNode).on(Utils.getAllTransitionEvents(), null);
             }.bind(this));
         }
         requestAnimationFrame(function () {
@@ -168,7 +173,7 @@ class GlassPane extends React.Component {
 
     _setFade() {
         if (this.props.fadeTop || this.props.fadeBottom) {
-            this.contentContainer
+            this.__contentContainer
                 .style('-webkit-mask-image',
                     `-webkit-gradient(linear, left top, left bottom, 
             from(rgba(0,0,0,0)),
@@ -180,112 +185,198 @@ class GlassPane extends React.Component {
                 .style('mask', `url(#${this._getFadeMaskId()})`);
         }
         else
-            this.contentContainer
+            this.__contentContainer
                 .style('-webkit-mask-image', 'none')
                 .style('mask', 'none');
     }
 
     _onScroll(evt) {
+        if (!this.__scrollTimer)
+            return false;
         evt.preventDefault();
         let offset = evt.deltaY;
-        let contentNode = this.contentContainer
-                              .select('.glass-pane__content')
-                              .node();
+        let contentNode = this.__contentBox.select('.glass-pane__content').node();
         if (evt.deltaMode == 1)
             offset *= parseFloat(Utils.getActualStyle(contentNode, 'line-height'));
-        let delta = offset / contentNode.getBoundingClientRect().height;
+        let contentHeight = contentNode.getBoundingClientRect().height -
+                this.__contentBox.node().getBoundingClientRect().height,
+            delta = offset / contentHeight,
+            targetOffset = Utils.fitInRange((this.state.scrollOffsetTarget || this.state.scrollOffset) + delta, 0, 1);
+        this._scrollAnimate(targetOffset);
+    }
+
+    _scrollAnimate(offset) {
         this.setState({
-            scrollOffset: Math.min(1, Math.max(0, this.state.scrollOffset + delta))
+            scrollOffsetTarget: offset
+        }, function () {
+            this.__scrollTimer.restart(this._tweenScroll);
+        }.bind(this));
+    }
+
+
+    _tweenScroll(elapsed) {
+        if (!this.__scrollTimer || this.state.scrollOffsetTarget === null)
+            return false;
+        let error = this.state.scrollOffsetTarget - this.state.scrollOffset,
+            offset = 0;
+        if (Math.abs(error) < 10e-4) {
+            this.__scrollTimer.stop();
+            offset = this.state.scrollOffsetTarget;
+            this.setState({
+                scrollOffsetTarget: null
+            });
+        }
+        else {
+            let exp = Math.exp(-elapsed / this.props.scrollDecay);
+            offset = Utils.fitInRange(this.state.scrollOffsetTarget - error * exp, 0, 1);
+        }
+        this.setState({
+            scrollOffset: offset
         }, this._updateScroll);
     }
 
     _setScroll() {
-        if (!this.scrollContainer || !this.props.scroll)
+        if (!this.__scrollContainer || !this.props.scroll)
             return false;
         let _self = this, dragStartY = null;
-        let contentBody = this.contentContainer.select('.glass-pane__content'),
+        let contentBody = this.__contentContainer.select('.glass-pane__content'),
             contentBox = contentBody.node().getBoundingClientRect(),
-            wrapperBox = Utils.getInnerSize(this.contentWrapper.node()),
-            scrollBar = this.scrollContainer.select('.glass-pane__content-scroll-bar'),
+            wrapperBox = Utils.getInnerSize(this.__contentBox.node()),
+            contentRange = Math.max(0, contentBox.height - wrapperBox.height),
+            scrollBar = this.__scrollContainer.select('.glass-pane__content-scroll-bar'),
             scrollBox = Utils.getInnerSize(scrollBar.node()),
             scrollNeeded = this.props.scroll && (contentBox.height > wrapperBox.height),
             scrollerSize = Math.round(10 * scrollBox.height * wrapperBox.height / contentBox.height) / 10;
-        this.scrollHandle.style('height', scrollerSize + 'px').on(".drag", null);
+        this.__scrollHandle.style('height', scrollerSize + 'px').on(".drag", null);
         scrollBar.on('click', null);
-        Utils.removeWheelListener(this.contentContainer.classed('has-scroll', scrollNeeded).node(), this._onScroll);
+        this.__scrollDragSpeed = 0;
+        this.__scrollDragDistance = 0;
+        this.__scrollDragMeasureMark = null;
+        Utils.removeWheelListener(this.__contentContainer.classed('has-scroll', scrollNeeded).node(), this._onScroll);
         if (scrollNeeded) {
-            this.scrollInterpolate = d3.scaleLinear()
-                                       .domain([0, 1])
-                                       .range([0, -Math.max(0, contentBox.height - wrapperBox.height)]);
-            this.scrollHandleOffset = d3.scaleLinear()
-                                        .domain([0, 1])
-                                        .range([0, scrollBox.height - scrollerSize]);
+            this.__scrollInterpolate = d3.scaleLinear()
+                                         .domain([0, 1])
+                                         .range([0, -contentRange]);
+            this.__scrollHandleOffset = d3.scaleLinear()
+                                          .domain([0, 1])
+                                          .range([0, scrollBox.height - scrollerSize]);
 
             scrollBar.on('click', function (ev) {
                 ev = ev || d3_live.event;
                 if (ev.target != scrollBar.node())
                     return false;
-                _self.setState({
-                        scrollOffset: _self.scrollHandleOffset.invert(Utils.getMouseEventOffset(ev).offsetY - scrollerSize / 2)
-                    },
-                    _self._updateScroll);
+                _self._scrollAnimate(_self.__scrollHandleOffset.invert(Utils.getMouseEventOffset(ev).offsetY - scrollerSize / 2));
+            }).on('touchend', function (ev) {
+                ev = ev || d3_live.event;
+                scrollBar.classed('dragging', false);
             });
-            this.scrollHandle.call(d3.drag()
-                                     .on("start", function () {
-                                         let ev = d3_live.event;
-                                         dragStartY = Utils.getMouseEventOffset(ev.sourceEvent).offsetY;
-                                         d3.select(this.parentNode).classed('dragging', true);
+            this.__contentBox.call(d3.drag()
+                                     //start measuring of drag speed
+                                     .on('start', function () {
+                                         _self.__scrollDragDistance = 0;
+                                         _self.__scrollDragSpeed = 0;
+                                         this.__scrollDragMeasureMark = d3.now();
+                                         _self.__dragTimer.restart(_self._measureDragSpeed);
                                      })
                                      .on('drag', function () {
                                          let ev = d3_live.event;
+                                         if (!ev.dy || ev.identifier == 'mouse')
+                                             return true;
+                                         let dy = ev.dy;
+                                         //if user changes the direction of drag, start measuring all over again
+                                         if (_self.__scrollDragDistance * dy <= 0) {
+                                             _self.__scrollDragDistance = dy;
+                                         }
+                                         else
+                                             _self.__scrollDragDistance += dy;
                                          ev.sourceEvent.stopPropagation();
-                                         let offset = _self.scrollHandleOffset.invert(ev.y - (dragStartY || scrollerSize / 2));
+                                         let offset = Utils.fitInRange(_self.state.scrollOffset - (dy / contentRange), 0, 1);
                                          _self.setState({
                                              scrollOffset: offset
                                          }, _self._updateScroll);
                                      })
+                                     //make kinetic inertia
                                      .on('end', function () {
-                                         d3.select(this.parentNode).classed('dragging', false);
-                                         dragStartY = null;
-                                     }));
-            Utils.addWheelListener(this.contentContainer.node(), this._onScroll);
+                                         if (!_self.__scrollDragMeasureMark)
+                                             return false;
+                                         _self._measureDragSpeed(d3.now() - _self.__scrollDragMeasureMark, true);
+                                         _self.__dragTimer.stop();
+                                         let dragSpeed = _self.__scrollDragSpeed,
+                                             distance = dragSpeed * _self.props.scrollDecay / 1000;
+                                         if (Math.abs(dragSpeed) > contentRange / 10)
+                                             _self._scrollAnimate(Utils.fitInRange(_self.state.scrollOffset - (distance / contentRange), 0, 1));
+                                         _self.__scrollDragSpeed = 0;
+                                         _self.__scrollDragDistance = 0;
+                                         _self.__scrollDragMeasureMark = null;
+                                     }))
+                .on('mousedown.drag', null);
+            this.__scrollHandle.call(d3.drag()
+                                       .on("start", function () {
+                                           let ev = d3_live.event;
+                                           dragStartY = Utils.getMouseEventOffset(ev.sourceEvent).offsetY;
+                                           d3.select(this.parentNode).classed('dragging', true);
+                                       })
+                                       .on('drag', function () {
+                                           let ev = d3_live.event;
+                                           ev.sourceEvent.stopPropagation();
+                                           let offset = _self.__scrollHandleOffset.invert(ev.y - (dragStartY || scrollerSize / 2));
+                                           _self._scrollAnimate(offset);
+                                       })
+                                       .on('end', function () {
+                                           d3.select(this.parentNode).classed('dragging', false);
+                                           dragStartY = null;
+                                       }));
+            Utils.addWheelListener(this.__contentContainer.node(), this._onScroll);
         }
         else
-            this.scrollInterpolate = this.scrollHandleOffset = null;
+            this.__scrollInterpolate = this.__scrollHandleOffset = null;
         return scrollNeeded && this._updateScroll();
+    }
 
+    _measureDragSpeed(elapsed, force = false) {
+        let measureLength = 1000 / 60 * 7,
+            temporalSmoothCoefficient = 0.2;
+        elapsed = Math.max(elapsed, d3.now() - this.__scrollDragMeasureMark);
+        if (force || elapsed > measureLength) {
+            let v = 1000 * this.__scrollDragDistance / (1 + elapsed);
+            this.__scrollDragDistance = 0;
+            this.__scrollDragMeasureMark = d3.now();
+            this.__scrollDragSpeed = temporalSmoothCoefficient * this.__scrollDragSpeed + 0.8 * v;
+            this.__dragTimer.restart(this._measureDragSpeed);
+        }
     }
 
     _updateScroll() {
-        if (!this.scrollContainer)
+        if (!this.__scrollContainer)
             return false;
         requestAnimationFrame(function () {
-            this.contentWrapper
+            this.__contentBox
                 .select('.glass-pane__content')
                 .style('transform', `translate(0, ${this._getScrollPosition()}px)`);
 
-            this.scrollHandle.style('top', this._getScrollHandlePosition() + 'px');
+            this.__scrollHandle.style('top', this._getScrollHandlePosition() + 'px');
         }.bind(this));
     }
 
     _setBlurSource() {
         let blurSource = null;
-        this.blurSource = null;
+        this.__blurSource = null;
         if (this.props.bgBlurSource && (blurSource = d3.select(this.props.bgBlurSource))) {
-            this.blurSource = blurSource;
+            this.__blurSource = blurSource;
         }
         else {
-            this.blurContainer.html('').classed('fade-in', false);
+            this.__blurContainer.html('').classed('fade-in', false);
         }
 
     }
 
+
     _updateBlur() {
-        if (!this.blurSource)
+        if (!this.__blurSource)
             return false;
-        let sourceFrame = this.blurSource.node().getBoundingClientRect();
-        let targetFrame = this.blurContainer.node().parentNode.getBoundingClientRect();
-        this.blurContainer
+        let sourceFrame = this.__blurSource.node().getBoundingClientRect();
+        let targetFrame = this.__blurContainer.node().parentNode.getBoundingClientRect();
+        this.__blurContainer
             .style('width', sourceFrame.width + 'px')
             .style('height', sourceFrame.height + 'px')
             .style('left', -targetFrame.left + 'px')
@@ -294,35 +385,36 @@ class GlassPane extends React.Component {
     }
 
     _setBlurred() {
-        if (!this.blurSource) {
+        if (!this.__blurSource) {
             return false;
         }
-        let content = this.blurSource.html();
-        this.blurContainer.html(content);
+        let content = this.__blurSource.html();
+        this.__blurContainer.html(content);
         this._updateBlur();
     }
 
     _setDOMCache() {
-        this.container = ReactDOM.findDOMNode(this);
-        this.blurContainer = d3.select(this.container)
-                               .select('.glass-pane__blur-content');
-        this.contentContainer = d3.select(this.container).select('.glass-pane__content-holder');
-        this.contentWrapper = this.contentContainer.select('.glass-pane__content-wrapper');
-        this.scrollContainer = this.props.scroll ? d3.select(this.container)
-                                                     .select('.glass-pane__content-scroll') : null;
-        this.scrollHandle = this.scrollContainer ? this.scrollContainer
-                                                       .select('.glass-pane__content-scroll-handle') : null;
+        this.__container = ReactDOM.findDOMNode(this);
+        this.__blurContainer = d3.select(this.__container)
+                                 .select('.glass-pane__blur-content');
+        this.__contentContainer = d3.select(this.__container).select('.glass-pane__content-holder');
+        this.__contentBox = this.__contentContainer.select('.glass-pane__content-wrapper');
+        this.__scrollContainer = this.props.scroll ? d3.select(this.__container)
+                                                       .select('.glass-pane__content-scroll') : null;
+        this.__scrollHandle = this.__scrollContainer ? this.__scrollContainer
+                                                           .select('.glass-pane__content-scroll-handle') : null;
     }
 
 
     shouldComponentUpdate(nextProps, nextState) {
-        if (this.props == nextProps)
-            return false;
-        return !(_.isMatch(this.props, nextProps));
+        return !!(nextState.init);
     }
 
-    componentWillReceiveProps() {
+    componentWillReceiveProps(nextProps) {
+        if ((this.props == nextProps) || (_.isMatch(this.props, nextProps)))
+            return false;
         this.setState({init: true});
+        return true;
     }
 
     componentDidMount() {
@@ -331,18 +423,21 @@ class GlassPane extends React.Component {
             this._setScroll();
             this._updateBlur();
         }.bind(this));
+        this.__scrollTimer = d3.timer(this._tweenScroll);
+        this.__dragTimer = d3.timer(this._measureDragSpeed);
         this._setFade();
         if (this.props.hasTransition === true)
-            d3.select(this.container.parentNode).on(Utils.getAllTransitionEvents(), this._redraw);
+            d3.select(this.__container.parentNode).on(Utils.getAllTransitionEvents(), this._redraw);
         else
             this._redraw();
     }
 
 
     componendDidUpdate() {
+        console.log('Oops I did it again');
         this._setDOMCache();
         if (this.props.hasTransition === true)
-            d3.select(this.container.parentNode).on(Utils.getAllTransitionEvents(), this._redraw);
+            d3.select(this.__container.parentNode).on(Utils.getAllTransitionEvents(), this._redraw);
         else
             this._redraw();
     }
@@ -654,9 +749,8 @@ GlassPane.defaultProps = {
     fadeTop: 0.05,
     fadeBottom: 0.05,
     hasTransition: false,
-    scroll: false
+    scroll: false,
+    scrollDecay: 350
 };
 
-export
-default
-GlassPane;
+export default GlassPane;

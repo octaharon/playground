@@ -92,7 +92,6 @@
         padding-top: 20px;
         padding-bottom: 20px;
         will-change: transform;
-        transition: transform 0.1s ease-in;
 
         p:first-child {
           margin-top: 0;
@@ -184,7 +183,7 @@
           box-sizing: content-box;
           @include gradient-horizontal(#777, #CCC);
           border: 1px #222 solid;
-          transition: all 0.1s ease-in;
+          transition: filter 0.1s ease-out, border-color 0.1s ease-in;
           border-radius: 5px;
 
         }
