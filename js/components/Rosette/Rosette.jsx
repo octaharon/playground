@@ -4,7 +4,6 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import d3 from '../../d3-lib';
 import _ from 'underscore';
-import Timer from '../../services/TimerService';
 
 
 const propTypes = {
@@ -216,9 +215,9 @@ class Rosette extends React.Component {
     }
 
     _rotateMe(elapsed) {
-        let angle = this.state.rotation + this.props.rotateSpeed;
-        if (angle > 360)
-            angle -= 360;
+        let precision = 10e+2;
+        let angle = Math.round(precision * this.props.rotateSpeed * 360 * elapsed / 1000);
+        angle = (angle % (360 * precision)) / precision;
         this.setState({
             rotation: angle
         }, this._setTransform);
@@ -292,13 +291,12 @@ class Rosette extends React.Component {
     }
 }
 
-Rosette.propTypes = propTypes;
-Rosette.defaultProps = {
+const defaultProps = {
     radiusFactor: Math.sqrt(2),
     angleStep: 90,
     maxRow: 5,
     minRow: 1,
-    rotateSpeed: 0.75,
+    rotateSpeed: Math.PI / 90,
     color: '#FFFFFF',
     thicknessFactor: 0.025,
     glowFactor: 0.5,
@@ -310,4 +308,24 @@ Rosette.defaultProps = {
     cropY: 0
 };
 
-export default Rosette;
+const propSettings = {
+    radiusFactor: [0.1, 5],
+    angleStep: [10, 180],
+    minRow: [1, 5, 1],
+    maxRow: [1, 6, 1],
+    color: 'color',
+    rotateSpeed: [-1, 1],
+    thicknessFactor: [0.01, 0.5],
+    glowFactor: [0, 10],
+    outlineOuter: true,
+    outlineInner: true,
+    cropOuter: [0, 6],
+    cropInner: [0, 5],
+    cropX: [-1, 1, 1],
+    cropY: [-1, 1, 1]
+};
+
+Rosette.propTypes = propTypes;
+Rosette.defaultProps = defaultProps;
+
+export {Rosette as default, defaultProps, propSettings};

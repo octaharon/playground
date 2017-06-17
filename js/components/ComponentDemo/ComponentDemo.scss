@@ -1,0 +1,113 @@
+@import "../../../sass/mixins";
+@import "../../../sass/fonts";
+
+.component-demo {
+  .component-demo__component, .component-demo__controls {
+    top: 5%;
+    box-sizing: content-box;
+    height: 90%;
+
+    .glass-pane {
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  .component-demo__component {
+    position: absolute;
+    width: 47%;
+    left: 2%;
+    transform-origin: 0 50% 0;
+    transform: perspective(500px) rotate3d(0, 1, 0, 90deg) translate3d(-100%, 0px, -200px);
+    &.fade-in {
+      transform: perspective(500px) rotate3d(0, 1, 0, 0) translate3d(0px, 0px, 0px);
+    }
+
+    .glass-pane__content {
+      width: 100%;
+      height: 100%;
+    }
+
+    .component-demo__component-console {
+      border: 1px #900 dashed;
+      @include font-monospace;
+      min-height: 40px;
+      font-size: 0.9em;
+      width: 80%;
+      box-sizing: border-box;
+      padding: 5px;
+      margin-left: 10%;
+      color: #CCC;
+      span {
+        color: #FFF;
+      }
+    }
+
+    .component-demo__component-content {
+      width: 80%;
+      height: 80%;
+      margin-top: 5px;
+      margin-left: 10%;
+      z-index: 120;
+
+      & > div {
+        border: 1px #999 dashed;
+      }
+    }
+  }
+
+  .component-demo__controls {
+    transform-origin: 100% 50% 0;
+    transform: perspective(500px) rotate3d(0, 1, 0, -90deg) translate3d(100%, 0px, -200px);
+    &.fade-in {
+      transform: perspective(500px) rotate3d(0, 1, 0, 0) translate3d(0px, 0px, 0px);
+    }
+    position: absolute;
+    right: 2%;
+    width: 47%;
+
+    @include font-main;
+    color: #eee;
+    font-size: 1em;
+    line-height: 1.25;
+
+    .glass-pane__content-holder {
+      padding-right: 30px !important;
+
+      p {
+        margin-left: 15px;
+        margin-top: 20px;
+
+        &.caption {
+          font-size: 1.2em;
+          color: #CCC;
+
+          span {
+            @include font-caption-bold;
+          }
+        }
+
+        &.heading {
+          font-size: 1.3em;
+        }
+      }
+    }
+
+    .component-demo__component-description {
+      margin-bottom: 20px;
+      &:empty {
+        display: none;
+      }
+    }
+
+    .component-demo__control-block {
+      margin-bottom: 20px;
+      width: 100%;
+
+      .slider-control {
+        width: 100%;
+        display: block;
+      }
+    }
+  }
+}

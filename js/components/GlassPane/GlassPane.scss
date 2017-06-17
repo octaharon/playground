@@ -92,6 +92,7 @@
         padding-top: 20px;
         padding-bottom: 20px;
         will-change: transform;
+        width: 100%;
 
         p:first-child {
           margin-top: 0;
@@ -160,7 +161,7 @@
         top: 0;
         cursor: pointer;
         height: 100%;
-        transition: all 1.8s linear;
+        transition: all 2.5s ease-in;
         filter: opacity(0);
         background-color: rgba(40, 40, 40, 0);
         @include gradient-vertical-three-colors(rgba(200, 200, 200, 0), rgba(100, 100, 100, 0.8), 50%, rgba(200, 200, 200, 0));

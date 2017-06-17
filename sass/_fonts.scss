@@ -1,7 +1,4 @@
-@mixin font-monospace {
-  font-family: 'Cutive Mono', monospace;
-}
-
+//Cyrillic
 @mixin font-heading {
   font-family: 'PT Serif Caption', serif;
   font-style: normal;
@@ -22,6 +19,11 @@
   font-weight: 700;
 }
 
+//English only
+@mixin font-monospace {
+  font-family: 'Cutive Mono', monospace;
+}
+
 @mixin font-caption {
   font-family: 'Rokkitt', serif;
   font-weight: 300;
@@ -34,4 +36,16 @@
 
 .heading {
   @include font-heading;
+}
+
+.caption {
+  @include font-caption;
+}
+
+.smaller {
+  font-size: 80%;
+}
+
+.bigger {
+  font-size: 120%;
 }

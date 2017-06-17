@@ -9,19 +9,28 @@ import _ from 'underscore';
 
 import Utils from '../../utils';
 
+const colorSchemes = {
+    'warm': x => d3.interpolateWarm(x),
+    'cool': x => d3.interpolateCool(x),
+    'warm-inverse': x => d3.interpolateWarm(1 - x),
+    'cool-inverse': x => d3.interpolateCool(1 - x)
+};
+
 const propTypes = {
     id: PropTypes.string.isRequired,
     min: PropTypes.number.isRequired,
     max: PropTypes.number.isRequired,
     value: PropTypes.number,
     vertical: PropTypes.bool,
+    size: PropTypes.number,
+    colorScheme: PropTypes.oneOf(Object.keys(colorSchemes)),
     sliderOffset: PropTypes.number,
     ticks: PropTypes.number,
     tickSuffix: PropTypes.string,
     tickOffset: PropTypes.number,
     tickSize: PropTypes.number,
+    tickFormat: PropTypes.string,
     handleRadius: PropTypes.number,
-    size: PropTypes.number,
     captionsOffset: PropTypes.number,
     step: PropTypes.number,
     onChange: PropTypes.func
@@ -30,87 +39,97 @@ const propTypes = {
 class Slider extends React.Component {
     constructor(props) {
         super(props);
-        this.widthConstant = 1000;
         if (this.props.max <= this.props.min)
             throw '"Max" value for Slider Control must be greater than "Min" value';
         this.state = {
-            value: props.value || props.min
+            value: _.isNumber(props.value) ? props.value : props.min
         };
-        this.redraw = this.redraw.bind(this);
+        this._redraw = this._redraw.bind(this);
+        this._interpolateColor = this._interpolateColor.bind(this);
     }
 
     componentDidMount() {
-        this.container = d3.select(`.slider-control#${this.props.id}`);
-        this.redraw();
+        this.__container = d3.select(`.slider-control#${this.props.id}`);
+        this._redraw();
     }
 
     shouldComponentUpdate(nextProps, nextState) {
-        if (nextProps.value) {
-            let value = nextProps.value;
-            delete nextProps['value'];
+        let props = Object.assign({}, nextProps);
+        let value = props.value;
+        if (_.isNumber(value)) {
+            delete props['value'];
             if (value != this.state.value) {
-                this.updateValue(value);
-                return false;
+                this._updateValue(value, true);
             }
-
         }
-        return !_.isMatch(this.props, nextProps);
+        /*else
+         debugger;*/
+        return !Utils.compareObjectProps(this.props, props);
     }
 
     componentDidUpdate(prevProps, prevState) {
-        this.redraw();
-    }
-
-    getGradientId() {
-        return `slider-track-fill-${this.props.id}`;
-    }
-
-    getGlowFilterId() {
-        return `slider-handle-glow-${this.props.id}`;
-    }
-
-    getTickId() {
-        return `slider-tick-${this.props.id}`;
+        this._redraw();
     }
 
     getValue() {
         return this.state.value;
     }
 
-    //this method is redefined within this.redraw
-    interpolateValue(value) {
+    _getGradientId() {
+        return `slider-track-fill-${this.props.id}`;
+    }
+
+    _getGlowFilterId() {
+        return `slider-handle-glow-${this.props.id}`;
+    }
+
+    _getTickId() {
+        return `slider-tick-${this.props.id}`;
+    }
+
+    //this method is redefined within this._redraw
+    _interpolateValue(value) {
         return value;
     }
 
-    interpolateColor(value) {
-        return d3.interpolateCool(parseFloat(value) || 0);
+    _interpolateColor(value) {
+        value = parseFloat(value) || 0;
+        value = Utils.fitInRange(value, 0, 1);
+        if (_.isFunction(colorSchemes[this.props.colorScheme]))
+            return colorSchemes[this.props.colorScheme](value);
+        return d3.interpolateCool(value);
     }
 
-    updateView(value) {
+    _updateView(value) {
         requestAnimationFrame(function () {
-            let percent = this.interpolateValue(value);
-            let color = this.interpolateColor(percent / 100);
+            let percent = this._interpolateValue(value);
+            let color = this._interpolateColor(percent / 100);
             this.handle.attr("cx", `${percent}%`).attr('fill', color);
-            this.container.select('.track-select').attr('x2', `${percent}%`);
-            if (this.props.onChange instanceof Function)
-                this.props.onChange(value);
+            this.__container.select('.track-select').attr('x2', `${percent}%`);
         }.bind(this));
     }
 
 
-    updateValue(value) {
+    _updateValue(value, force = false) {
+        let epsilon = (this.props.max - this.props.min) * 10e-4;
         value = parseFloat(value);
         if (this.props.step)
             value = Math.max(this.props.min, Math.min(this.props.max, Utils.closestFraction(value - this.props.step / 10, this.props.step)));
-
-        this.setState({value}, this.updateView(value));
+        if (force)
+            this.setState({value}, this._updateView(value));
+        else if (Math.abs(value - this.state.value) > epsilon) {
+            if (_.isFunction(this.props.onChange))
+                this.props.onChange(value);
+            this.setState({value}, this._updateView(value));
+        }
 
     }
 
-    redraw() {
+    _redraw() {
+        console.log('redraw ' + this.props.id);
         let _self = this;
         let height = Math.round(_self.props.size);
-        let svg = _self.container.select("svg")
+        let svg = _self.__container.select("svg")
                        .attr('height', height);
         let gradientInterpolationDensity = 10;
 
@@ -118,10 +137,10 @@ class Slider extends React.Component {
             return this.parentNode.appendChild(this.cloneNode(true));
         };
 
-        _self.interpolateValue = d3.scaleLinear()
-                                   .domain([_self.props.min, _self.props.max])
-                                   .range([0, 100])
-                                   .clamp(true);
+        _self._interpolateValue = d3.scaleLinear()
+                                    .domain([_self.props.min, _self.props.max])
+                                    .range([0, 100])
+                                    .clamp(true);
 
 
         svg.selectAll('g').remove();
@@ -130,19 +149,21 @@ class Slider extends React.Component {
                         .attr("class", "slider")
                         .attr("transform", `translate(0, ${_self.props.sliderOffset * _self.props.size})`);
 
-        let ticks = _.uniq(_self.interpolateValue.ticks(Math.max(2, _self.props.ticks))
-                                .concat(_self.interpolateValue.domain()));
+        let tickCount = Math.max(2, _self.props.ticks);
+        let ticks = _.uniq(_self._interpolateValue.ticks(tickCount)
+                                .concat(_self._interpolateValue.domain()));
+        ticks = ticks.map(_self._interpolateValue.tickFormat(ticks.length, this.props.tickFormat));
 
 
         let colorStops = svg.select('defs')
-                            .select(`linearGradient#${this.getGradientId()}`)
+                            .select(`linearGradient#${this._getGradientId()}`)
                             .selectAll('stop')
                             .data(_.range(0, gradientInterpolationDensity));
         colorStops.enter()
                   .append('stop')
                   .merge(colorStops)
                   .attr('offset', d => `${Math.round(d / gradientInterpolationDensity * 100)}%`)
-                  .attr('stop-color', d => _self.interpolateColor(d / gradientInterpolationDensity));
+                  .attr('stop-color', d => _self._interpolateColor(d / gradientInterpolationDensity));
 
         slider.append("line")
               .attr("class", "track")
@@ -161,11 +182,12 @@ class Slider extends React.Component {
                       .on("start drag", function () {
                           let x = d3_live.event.x / svg.select('.slider').node().getBBox().width;
                           d3_live.event.sourceEvent.stopPropagation();
+                          d3_live.event.sourceEvent.stopImmediatePropagation();
                           d3_live.event.sourceEvent.preventDefault();
-                          _self.updateValue(_self.interpolateValue.invert(x * 100));
+                          _self._updateValue(_self._interpolateValue.invert(x * 100));
                       }));
 
-        slider.select('line.track-select').attr("stroke", `url(#${this.getGradientId()})`);
+        slider.select('line.track-select').attr("stroke", `url(#${this._getGradientId()})`);
 
         let tickLines = svg.append("g")
                            .attr("class", "tickLines")
@@ -174,8 +196,8 @@ class Slider extends React.Component {
                            .data(ticks);
 
         tickLines.enter().append("use").attr('class', 'tick').merge(tickLines)
-                 .attr('x', d => _self.interpolateValue(d) + '%')
-                 .attr('href', `#${this.getTickId()}`);
+                 .attr('x', d => _self._interpolateValue(d) + '%')
+                 .attr('href', `#${this._getTickId()}`);
 
         let tickCaptions = svg.append("g")
                               .attr("class", "tickCaptions")
@@ -183,18 +205,19 @@ class Slider extends React.Component {
                               .selectAll("text")
                               .data(ticks);
         tickCaptions.enter().append('text').merge(tickCaptions)
-                    .attr("x", d => (_self.interpolateValue(d) + '%'))
+                    .attr("x", d => (_self._interpolateValue(d) + '%'))
                     .attr("text-anchor", "middle")
                     .text(d => `${d}${_self.props.tickSuffix}`)
-                    .on('click', d => this.updateValue(d));
+                    .on('click', d => this._updateValue(d));
 
 
         _self.handle = slider.insert("circle", ".track-overlay")
                              .attr("class", "handle")
                              .attr("r", _self.props.handleRadius)
-                             .style('filter', `url('#${this.getGlowFilterId()}`);
+                             .style('filter', `url('#${this._getGlowFilterId()}`);
 
-        _self.updateValue(_self.props.value || _self.props.min);
+        let value = _.isNumber(_self.props.value) ? _self.props.value : _self.props.min;
+        _self._updateValue(value, true);
 
     }
 
@@ -202,7 +225,7 @@ class Slider extends React.Component {
         return (
             <div className="slider-control" id={this.props.id}>
                 <svg width="100%" height={this.props.size} preserveAspectRatio="xMidYMid meet">
-                    <filter id={this.getGlowFilterId()} x="-200%" y="-200%" width="400%" height="400%">
+                    <filter id={this._getGlowFilterId()} x="-200%" y="-200%" width="400%" height="400%">
                         <feGaussianBlur result="blurOut" in="SourceGraphic" stdDeviation="2"/>
                         <feGaussianBlur result="blurOut2" in="SourceGraphic" stdDeviation="1"/>
                         <feSpecularLighting surfaceScale="2" specularConstant="1" specularExponent="35"
@@ -220,8 +243,8 @@ class Slider extends React.Component {
                             y1="0"
                             y2="0"
                             gradientUnits="userSpaceOnUse"
-                            id={this.getGradientId()}/>
-                        <line className="tick" x1="0" x2="0" y1="0" y2={this.props.tickSize} id={this.getTickId()}/>
+                            id={this._getGradientId()}/>
+                        <line className="tick" x1="0" x2="0" y1="0" y2={this.props.tickSize} id={this._getTickId()}/>
                     </defs>
                 </svg>
             </div>
@@ -229,8 +252,7 @@ class Slider extends React.Component {
     }
 }
 
-Slider.propTypes = propTypes;
-Slider.defaultProps = {
+const defaultProps = {
     min: 0,
     max: 100,
     size: 45,
@@ -242,6 +264,28 @@ Slider.defaultProps = {
     handleRadius: 7,
     ticks: 10,
     tickSuffix: '',
+    tickFormat: null,
+    colorScheme: 'cool-inverse'
 };
 
-export default Slider;
+const propSettings = {
+    min: [-50, 50],
+    max: [50, 100],
+    size: [10, 100],
+    step: [0, 10],
+    colorScheme: Object.keys(colorSchemes),
+    sliderOffset: [0, 1],
+    tickOffset: [0, 1],
+    captionsOffset: [0, 1],
+    tickSize: [0, 15],
+    ticks: [0, 20, 1],
+    tickFormat: [],
+    handleRadius: [0, 15],
+    tickSuffix: [],
+    onChange: 'callback'
+};
+
+Slider.propTypes = propTypes;
+Slider.defaultProps = defaultProps;
+
+export {Slider as default, propSettings, defaultProps};

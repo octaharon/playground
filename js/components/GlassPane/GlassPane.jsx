@@ -35,15 +35,14 @@ let propTypes =
 class GlassPane extends React.Component {
     constructor(props) {
         super(props);
-        let width = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-        let height = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+        let {width, height} = Utils.getViewportSize();
         this.state = {
             scrollOffset: 0,
             scrollOffsetTarget: null,
             init: true
         };
-        this.internalResolution = {width, height, size: Math.max(width, height)};
-        this.specularMaskOffset = {x: 65, y: 45};
+        this.__internalResolution = {width, height, size: Math.max(width, height)};
+        this.__specularMaskOffset = {x: 65, y: 45};
         [
             '_redraw',
             '_setBlurSource',
@@ -134,8 +133,8 @@ class GlassPane extends React.Component {
 
     _getBorderTransform() {
         let precision = 10e-4;
-        let scaleX = Math.round((this.internalResolution.width - 2 * this.props.outlineWidth) / this.internalResolution.width / precision) * precision;
-        let scaleY = Math.round((this.internalResolution.height - 2 * this.props.outlineWidth) / this.internalResolution.height / precision) * precision;
+        let scaleX = Math.round((this.__internalResolution.width - 2 * this.props.outlineWidth) / this.__internalResolution.width / precision) * precision;
+        let scaleY = Math.round((this.__internalResolution.height - 2 * this.props.outlineWidth) / this.__internalResolution.height / precision) * precision;
         let scale = Math.min(scaleX, scaleY);
         return `scale(${scaleX}, ${scaleY})`;
     }
@@ -160,11 +159,13 @@ class GlassPane extends React.Component {
                   .style('transform-origin', '50% 50% 0');
                 if (this.props.hasTransition)
                     d3.select(this.__container.parentNode).on(Utils.getAllTransitionEvents(), null);
+                this._redraw();
             }.bind(this));
+            return false;
         }
         requestAnimationFrame(function () {
             this._setBlurSource();
-            this._setBlurred();
+            this._setBlurredContent();
             this._setFade();
             this._setScroll();
         }.bind(this))
@@ -273,6 +274,8 @@ class GlassPane extends React.Component {
             this.__contentBox.call(d3.drag()
                                      //start measuring of drag speed
                                      .on('start', function () {
+                                         if (d3_live.event.identifier == 'mouse')
+                                             return true;
                                          _self.__scrollDragDistance = 0;
                                          _self.__scrollDragSpeed = 0;
                                          this.__scrollDragMeasureMark = d3.now();
@@ -280,6 +283,8 @@ class GlassPane extends React.Component {
                                      })
                                      .on('drag', function () {
                                          let ev = d3_live.event;
+                                         ev.sourceEvent.stopPropagation();
+                                         ev.sourceEvent.stopImmediatePropagation();
                                          if (!ev.dy || ev.identifier == 'mouse')
                                              return true;
                                          let dy = ev.dy;
@@ -289,7 +294,6 @@ class GlassPane extends React.Component {
                                          }
                                          else
                                              _self.__scrollDragDistance += dy;
-                                         ev.sourceEvent.stopPropagation();
                                          let offset = Utils.fitInRange(_self.state.scrollOffset - (dy / contentRange), 0, 1);
                                          _self.setState({
                                              scrollOffset: offset
@@ -360,7 +364,7 @@ class GlassPane extends React.Component {
 
     _setBlurSource() {
         let blurSource = null;
-        this.__blurSource = null;
+        this.__blurSource = blurSource;
         if (this.props.bgBlurSource && (blurSource = d3.select(this.props.bgBlurSource))) {
             this.__blurSource = blurSource;
         }
@@ -384,7 +388,8 @@ class GlassPane extends React.Component {
             .classed('fade-in', true);
     }
 
-    _setBlurred() {
+    _setBlurredContent() {
+        this.__blurContainer.html('');
         if (!this.__blurSource) {
             return false;
         }
@@ -471,7 +476,7 @@ class GlassPane extends React.Component {
                      preserveAspectRatio="none"
                      width='100%'
                      height='100%'
-                     viewBox={`0 0 ${this.internalResolution.size} ${this.internalResolution.size}`}>
+                     viewBox={`0 0 ${this.__internalResolution.size} ${this.__internalResolution.size}`}>
                     <defs>
 
                         <rect width="100%" height="100%" x="0" y="0"
@@ -529,10 +534,10 @@ class GlassPane extends React.Component {
                         <mask id={this._getSpecularMaskId()}>
                             <rect x="0" y="0" width="100%" height="100%" fill="white"/>
                             <ellipse
-                                cx={this.specularMaskOffset.x + '%'}
-                                cy={this.specularMaskOffset.y + '%'}
-                                rx={this.specularMaskOffset.x + 1 + '%'}
-                                ry={this.specularMaskOffset.y + 1 + '%'}
+                                cx={this.__specularMaskOffset.x + '%'}
+                                cy={this.__specularMaskOffset.y + '%'}
+                                rx={this.__specularMaskOffset.x + 1 + '%'}
+                                ry={this.__specularMaskOffset.y + 1 + '%'}
                                 fill="black"
                                 style={
                                     {
@@ -540,9 +545,9 @@ class GlassPane extends React.Component {
                                     }
                                 }
                             />
-                            <rect x={this.specularMaskOffset.x + '%'}
+                            <rect x={this.__specularMaskOffset.x + '%'}
                                   y="0" width="100%" height="100%" fill="black"/>
-                            <rect y={this.specularMaskOffset.y + '%'}
+                            <rect y={this.__specularMaskOffset.y + '%'}
                                   x="0" width="100%" height="100%" fill="black"/>
                         </mask>
 
@@ -737,8 +742,7 @@ class GlassPane extends React.Component {
     }
 }
 
-GlassPane.propTypes = propTypes;
-GlassPane.defaultProps = {
+const defaultProps = {
     borderRadius: 15,
     bgColor: '#000',
     borderColor: '#fff',
@@ -759,4 +763,29 @@ GlassPane.defaultProps = {
     scrollDecay: 350
 };
 
-export default GlassPane;
+const propSettings =
+    {
+        bgColor: 'color',
+        minOpacity: [0, 1],
+        maxOpacity: [0, 1],
+        shadowOpacity: [0, 1],
+        shadowBlur: [0, 30],
+        shadowOffsetX: [-20, 20],
+        shadowOffsetY: [-20, 20],
+        borderRadius: [0, 20],
+        borderColor: 'color',
+        borderOpacity: [0, 1],
+        outlineOpacity: [0, 1],
+        outlineColor: 'color',
+        outlineWidth: [0, 20],
+        fadeTop: [0, 1],
+        fadeBottom: [0, 1],
+        hasTransition: true,
+        scroll: true,
+        scrollDecay: [0, 2000]
+    };
+
+GlassPane.propTypes = propTypes;
+GlassPane.defaultProps = defaultProps;
+
+export {GlassPane as default, propSettings, defaultProps};

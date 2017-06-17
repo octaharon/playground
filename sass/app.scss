@@ -22,6 +22,11 @@ body {
   top: 0;
   left: 0;
   z-index: 1;
+
+  .moire-room {
+    position: fixed;
+    z-index: 10;
+  }
 }
 
 .background-img {
@@ -68,73 +73,4 @@ $pane-transition-bezier: '.60,.32,.59,.99';
   -webkit-transform-style: preserve-3d;
   transform-style: preserve-3d;
   backface-visibility: hidden;
-}
-
-.content-demo, .controls {
-  top: 5%;
-  box-sizing: content-box;
-  height: 90%;
-
-  .glass-pane {
-    width: 100%;
-    height: 100%;
-  }
-
-  .rosette {
-    @include absolute-center();
-    width: 85%;
-    height: 85%;
-    z-index: 120;
-  }
-}
-
-.content-demo {
-  position: absolute;
-  width: 47%;
-  left: 2%;
-  transform-origin: 0 50% 0;
-  transform: perspective(500px) rotate3d(0, 1, 0, 90deg) translate3d(-100%, 0px, -200px);
-  &.fade-in {
-    transform: perspective(500px) rotate3d(0, 1, 0, 0) translate3d(0px, 0px, 0px);
-  }
-
-  .glass-pane__content {
-    width: 100%;
-    height: 100%;
-  }
-}
-
-.controls {
-  transform-origin: 100% 50% 0;
-  transform: perspective(500px) rotate3d(0, 1, 0, -90deg) translate3d(100%, 0px, -200px);
-  &.fade-in {
-    transform: perspective(500px) rotate3d(0, 1, 0, 0) translate3d(0px, 0px, 0px);
-  }
-  position: absolute;
-  right: 2%;
-  width: 47%;
-
-  @include font-main;
-  color: #ddd;
-  font-size: 1em;
-  line-height: 1.25;
-
-  .glass-pane__content-holder {
-    padding-right: 30px !important;
-
-    p {
-      margin-left: 10px;
-      margin-top: 20px;
-
-      &.heading {
-        font-size: 1.25em;
-      }
-    }
-  }
-
-  .slider-control {
-    width: 100%;
-    display: block;
-    margin-bottom: 20px;
-  }
 }

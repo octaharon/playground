@@ -1,9 +1,25 @@
+import _ from 'underscore';
 import optimizedResize from './utilities/optimizedResize';
 import Wheel from 'wheel';
 
 require('./utilities/requestAnimationFrame-polyfill');
 require('./utilities/objectValues-polyfill');
 require('custom-event-polyfill');
+
+_.mixin({
+    keysWhere: function (object, predicate) {
+        if (!_.isFunction(predicate))
+            return false;
+        if (!_.isObject(object))
+            return object;
+        let ret = [];
+        Object.keys(object).forEach(key => {
+            if (predicate(object[key]) !== false)
+                ret.push(key);
+        });
+        return ret;
+    }
+});
 
 
 const transitionEvents = {
@@ -103,6 +119,12 @@ class Utilities {
         };
     }
 
+    getViewportSize() {
+        let width = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+        let height = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+        return {width, height};
+    }
+
     whichTransitionEvent() {
         let t;
         let el = document.createElement('fakeelement');
@@ -112,6 +134,23 @@ class Utilities {
                 return transitionEvents[t];
             }
         }
+    }
+
+    toComparable(v) {
+        if (_.isNull(v) || _.isUndefined(v))
+            return v;
+        if (_.isFunction(v) || _.isArray(v))
+            return v.toString();
+        if (_.isObject(v))
+            return JSON.stringify(v);
+        return v.toString();
+    }
+
+    compareObjectProps(oldProps, newProps) {
+        return _.isMatch(
+            _.mapObject(oldProps, this.toComparable),
+            _.mapObject(newProps, this.toComparable)
+        );
     }
 
     getAllTransitionEvents() {
