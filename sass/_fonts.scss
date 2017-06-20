@@ -1,21 +1,21 @@
 //Cyrillic
 @mixin font-heading {
-  font-family: 'PT Serif Caption', serif;
+  font-family: 'PT Serif Caption', "Garamond", "Georgia", serif;
   font-style: normal;
 }
 
 @mixin font-heading-italic {
-  font-family: 'PT Serif Caption', serif;
+  font-family: 'PT Serif Caption', "Garamond", "Georgia", serif;
   font-style: italic;
 }
 
 @mixin font-main {
-  font-family: 'Play', sans-serif;
+  font-family: 'Play', "Arial", sans-serif;
   font-weight: 400;
 }
 
 @mixin font-bold {
-  font-family: 'Play', sans-serif;
+  font-family: 'Play', "Arial", sans-serif;
   font-weight: 700;
 }
 
@@ -25,12 +25,12 @@
 }
 
 @mixin font-caption {
-  font-family: 'Rokkitt', serif;
+  font-family: 'Rokkitt', "Georgia", serif;
   font-weight: 300;
 }
 
 @mixin font-caption-bold {
-  font-family: 'Rokkitt', serif;
+  font-family: 'Rokkitt', "Georgia", serif;
   font-weight: 700
 }
 

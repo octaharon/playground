@@ -2,9 +2,11 @@ var webpack = require('webpack');
 var debug = process.env.NODE_ENV !== "production";
 
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
+const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 const CompressionPlugin = require("compression-webpack-plugin");
 const BrotliPlugin = require('brotli-webpack-plugin');
+const CleanWebpackPlugin = require('clean-webpack-plugin');
 
 if (debug)
     console.log("running in debug mode");
@@ -20,14 +22,31 @@ function getEntrySources(sources) {
 
 function getPlugins() {
     var plugs = [
+        new webpack.optimize.ModuleConcatenationPlugin(),
         new ExtractTextPlugin({
             filename: 'style.css',
             allChunks: true
         }),
-        new webpack.optimize.ModuleConcatenationPlugin()
+        new OptimizeCssAssetsPlugin({
+            assetNameRegExp: /\.css$/g,
+            cssProcessor: require('cssnano'),
+            cssProcessorOptions: {
+                discardComments: {
+                    removeAll: true
+                }
+            },
+            canPrint: true
+        })
+
     ];
     if (!debug) {
         plugs.push(
+            new CleanWebpackPlugin(['app', 'fonts'], {
+                root: __dirname + '/web',
+                verbose: true,
+                dry: false,
+                //exclude: ['shared.js'],
+            }),
             new UglifyJSPlugin({
                 compress: {
                     warnings: false
@@ -38,13 +57,13 @@ function getPlugins() {
             new CompressionPlugin({
                 asset: "[path].gz[query]",
                 algorithm: "gzip",
-                test: /\.(js|html|css|svg)$/,
+                test: /\.(js|html|css|svg|ttf|eot|woff2?)$/,
                 threshold: 10240,
                 minRatio: 0.8
             }),
             new BrotliPlugin({
                 asset: '[path].br[query]',
-                test: /\.(js|css|html|svg)$/,
+                test: /\.(js|html|css|svg|ttf|eot|woff2?)$/,
                 threshold: 10240,
                 minRatio: 0.8
             })
@@ -56,7 +75,7 @@ function getPlugins() {
 module.exports = {
     devServer: {
         contentBase: "./web",
-        compress: true,
+        compress: false,
         port: 8080
     },
     entry: {
@@ -66,6 +85,7 @@ module.exports = {
     },
     output: {
         path: __dirname + '/web/app',
+        publicPath: '/app/',
         filename: '[name].js'
     },
     module: {
@@ -78,8 +98,12 @@ module.exports = {
                 exclude: /node_modules/
             },
             {
-                test: /\.(gif|eot|svg|ttf|woff(2)?)(\?v=\d+\.\d+\.\d+)?/,
-                loader: 'url-loader'
+                test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+                loader: "url-loader?limit=10000&mimetype=application/font-woff"
+            },
+            {
+                test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+                loader: "file-loader"
             },
             {
                 test: /\.(scss|css)$/,

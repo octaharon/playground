@@ -10,6 +10,7 @@ import d3 from '../../d3-lib';
 import Utils from '../../utils';
 
 import Slider from '../Slider/Slider';
+import SwitchSelector from '../SwitchSelector/SwitchSelector';
 import GlassPane from '../GlassPane/GlassPane';
 
 const supportedComponents = ['Rosette', 'Slider'];
@@ -115,11 +116,14 @@ class ComponentDemo extends React.Component {
                         value={defaultValue}
                         max={propSettings[1]}
                         colorScheme="warm"
-                        onChange={this._updateProperty.bind(this, propName)}
+                        onChange={this.state.componentCallbacks[propName]}
                     />;
                 break;
             case _.isArray(propSettings) && propSettings.length > 0:
-                controlComponent = <p>Multiple selector</p>;
+                controlComponent = <SwitchSelector
+                    options={propSettings}
+                    value={defaultValue}
+                    onChange={this.state.componentCallbacks[propName]}/>;
                 break;
             case _.isArray(propSettings):
                 controlComponent = <p>Text input</p>;
@@ -138,7 +142,7 @@ class ComponentDemo extends React.Component {
         return (
             <div className="component-demo__control-block" key={'component-' + propName}>
                 <p className="caption">
-                    {`${this.props.component}.${propName} = `}<span>{displayValue}</span>
+                    <i className="fa fa-cogs"/>{`${this.props.component}.${propName} = `}<span>{displayValue}</span>
                 </p>
                 {controlComponent}
             </div>
@@ -164,7 +168,7 @@ class ComponentDemo extends React.Component {
         return (
             <div className="component-demo">
                 <div className="component-demo__component content-pane">
-                    <GlassPane id={this._getId() + '-content'} hasTransition={true}>
+                    <GlassPane id={this._getId() + '-content'} hasTransition={true} bgBlurSource="#background">
                         <div className="component-demo__component-body" key="component-body">
                             <div className="component-demo__component-console">
                                 {this.state.console}
@@ -177,7 +181,8 @@ class ComponentDemo extends React.Component {
                     </GlassPane>
                 </div>
                 <div className="component-demo__controls content-pane">
-                    <GlassPane id={this._getId() + '-controls'} hasTransition={true} scroll={true}>
+                    <GlassPane id={this._getId() + '-controls'} hasTransition={true} scroll={true}
+                               bgBlurSource="#background">
                         <div className="component-demo__component-description" key="component-description">
                             <p className="heading">{this.props.component} component</p>
                             {this.props.children}

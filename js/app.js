@@ -2,11 +2,13 @@ require('../sass/app.scss');
 
 
 import 'font-awesome/scss/font-awesome.scss';
+import WebFont from 'webfontloader';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import Cookies from 'universal-cookie';
 import ReactSpinner from 'react-spinjs';
 import d3 from './d3-lib';
+
 
 import MoireRoom from './components/MoireRoom/MoireRoom';
 import Rosette from './components/Rosette/Rosette';
@@ -26,6 +28,16 @@ class App extends React.Component {
     }
 
     componentDidMount() {
+        WebFont.load({
+            google: {
+                families: [
+                    'Cutive Mono',
+                    'PT Serif Caption:400,400i:cyrillic,latin-ext',
+                    'Play:400,700:cyrillic,latin-ext',
+                    'Rokkitt:300,700'
+                ]
+            }
+        });
         this.setState({loading: false}, function () {
             d3.select('body').transition()
               .delay(250)
