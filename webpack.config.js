@@ -1,6 +1,11 @@
-var ExtractTextPlugin = require('extract-text-webpack-plugin');
 var webpack = require('webpack');
 var debug = process.env.NODE_ENV !== "production";
+
+const ExtractTextPlugin = require('extract-text-webpack-plugin');
+const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
+const CompressionPlugin = require("compression-webpack-plugin");
+const BrotliPlugin = require('brotli-webpack-plugin');
+
 if (debug)
     console.log("running in debug mode");
 
@@ -18,14 +23,32 @@ function getPlugins() {
         new ExtractTextPlugin({
             filename: 'style.css',
             allChunks: true
-        })
+        }),
+        new webpack.optimize.ModuleConcatenationPlugin()
     ];
     if (!debug) {
-        plugs.push(new webpack.optimize.UglifyJsPlugin({
-            compress: {
-                warnings: false
-            }
-        }));
+        plugs.push(
+            new UglifyJSPlugin({
+                compress: {
+                    warnings: false
+                },
+                mangle: false,
+                comments: false
+            }),
+            new CompressionPlugin({
+                asset: "[path].gz[query]",
+                algorithm: "gzip",
+                test: /\.(js|html|css|svg)$/,
+                threshold: 10240,
+                minRatio: 0.8
+            }),
+            new BrotliPlugin({
+                asset: '[path].br[query]',
+                test: /\.(js|css|html|svg)$/,
+                threshold: 10240,
+                minRatio: 0.8
+            })
+        );
     }
     return plugs;
 }
@@ -42,7 +65,7 @@ module.exports = {
         ])
     },
     output: {
-        path: __dirname + '/web',
+        path: __dirname + '/web/app',
         filename: '[name].js'
     },
     module: {

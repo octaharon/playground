@@ -411,12 +411,9 @@ class GlassPane extends React.Component {
     }
 
 
-    shouldComponentUpdate(nextProps, nextState) {
-        return !!(nextState.init);
-    }
-
     componentWillReceiveProps(nextProps) {
-        if ((this.props == nextProps) || (_.isMatch(this.props, nextProps)))
+        //debugger;
+        if (Utils.compareObjectProps(this.props, nextProps))
             return false;
         this.setState({init: true});
         return true;
@@ -438,14 +435,30 @@ class GlassPane extends React.Component {
     }
 
     componentWillUnmount() {
+        //Let's be friends with GC
         this.__scrollTimer.stop();
         this.__dragTimer.stop();
+        this.__contentBox.on('.drag', null);
+        this.__scrollHandle.on('.drag', null);
         this.__scrollTimer = this.__dragTimer = null;
+        Utils.removeWheelListener(this.__contentContainer);
+        this.__scrollContainer.select('.glass-pane__content-scroll-bar').on('click', null).on('touchend', null);
+        for (let domCache of [
+            '__container',
+            '__blurContainer',
+            '__blurSource',
+            '__contentContainer',
+            '__contentBox',
+            '__scrollContainer',
+            '__scrollHandle'
+        ]) {
+            delete this[domCache];
+        }
     }
 
 
     componendDidUpdate() {
-        console.log('Oops I did it again');
+        console.log(`render ${this.props.id}`);
         this._setDOMCache();
         if (this.props.hasTransition === true)
             d3.select(this.__container.parentNode).on(Utils.getAllTransitionEvents(), this._redraw);

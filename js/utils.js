@@ -8,13 +8,18 @@ require('custom-event-polyfill');
 
 _.mixin({
     keysWhere: function (object, predicate) {
-        if (!_.isFunction(predicate))
-            return false;
+        let comparator = predicate;
+        if (!_.isFunction(predicate)) {
+            if (_.isObject(predicate))
+                comparator = val => _.isMatch(val, predicate);
+            else
+                comparator = val => val === predicate;
+        }
         if (!_.isObject(object))
             return object;
         let ret = [];
         Object.keys(object).forEach(key => {
-            if (predicate(object[key]) !== false)
+            if (comparator(object[key]) !== false)
                 ret.push(key);
         });
         return ret;
@@ -142,15 +147,37 @@ class Utilities {
         if (_.isFunction(v) || _.isArray(v))
             return v.toString();
         if (_.isObject(v))
-            return JSON.stringify(v);
+            if (_.isUndefined(v['$$typeof']))
+                return JSON.stringify(v);
+            else
+                return v.key;
         return v.toString();
     }
 
-    compareObjectProps(oldProps, newProps) {
-        return _.isMatch(
-            _.mapObject(oldProps, this.toComparable),
-            _.mapObject(newProps, this.toComparable)
-        );
+    compareObjectProps(oldProps, newProps, withChildren = false) {
+        let k = Object.keys(newProps),
+            l = k.length,
+            i = 0,
+            mapChildren = v => _.isArray(v) ? v.map(mapChildren) : v.key;
+        for (i = 0; i < l; i++) {
+            if (k[i] == 'children') {
+                if (!withChildren)
+                    continue;
+                if (_.isArray(oldProps.children) && _.isArray(newProps.children)) {
+                    if (!_.isEqual(oldProps.children.map(mapChildren), newProps.children.map(mapChildren)))
+                        return false;
+                    else
+                        continue;
+                }
+                else if (_.isArray(oldProps.children) ^ _.isArray(newProps.children))
+                    return false;
+            }
+            if (this.toComparable(oldProps[k[i]]) !== this.toComparable(newProps[k[i]])
+            )
+                return false;
+
+        }
+        return true;
     }
 
     getAllTransitionEvents() {
@@ -160,6 +187,9 @@ class Utilities {
 
 }
 
-let Utils = new Utilities();
+let
+    Utils = new Utilities();
 
-export default Utils;
+export
+default
+Utils;

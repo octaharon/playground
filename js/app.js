@@ -52,12 +52,14 @@ class App extends React.Component {
                     <ReactSpinner />
                 </div>
                 <div id="background" style={{opacity: 0}}>
-                    {/*<div className="background-img"></div>*/}
-                    <MoireRoom delay={loadDelay}/>
+                    <div className="background-img"></div>
+                    {/*<MoireRoom delay={loadDelay}/>*/}
                 </div>
                 <div id="content">
                     <ComponentDemo component="Slider">
-                        <p>Some text goes here</p>
+                        <div className="slider-description" key="slider-description">
+                            <p>Some text goes here</p>
+                        </div>
                     </ComponentDemo>
                 </div>
             </div>

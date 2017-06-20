@@ -26,7 +26,7 @@ class ComponentDemo extends React.Component {
             componentProps: {},
             componentPropSettings: {},
             componentCallbacks: {},
-            console: ''
+            console: <p>This is console area, where component updates and callback will be logged</p>
         };
         [
             '_updateProperty',
@@ -50,23 +50,26 @@ class ComponentDemo extends React.Component {
     }
 
     _updateProperty(propertyName, value) {
-        console.log(`setting ${propertyName} to ${value}`);
+        delete this.state.console;
+        let epsilon = 10e-6;
+        if (_.isNumber(value))
+            value = parseFloat((Math.round(value / epsilon) * epsilon).toPrecision(5));
         if (this.state.componentPropSettings[propertyName] === 'callback') {
             this.setState({
-                console: <p>Callback <span>{propertyName}</span> called with value <span>{value}</span></p>
+                console: <p>Callback <span>{propertyName}</span> called with value <span>{value}</span>
+                </p>
             });
             return true;
         }
         if (this.state.componentProps[propertyName] != value)
             this.setState({
+                console: <p>Set <span>{propertyName}</span> to <span>{value}</span></p>,
                 componentProps: update(this.state.componentProps, {
                     [propertyName]: {
                         $set: value
                     }
 
                 })
-            }, function () {
-                //debugger;
             });
     }
 
@@ -87,12 +90,12 @@ class ComponentDemo extends React.Component {
             defaultValue = null || this.state.componentProps[propName],
             displayValue = defaultValue;
         if (_.isNumber(defaultValue))
-            displayValue = Math.round(defaultValue * 1000) / 1000;
+            displayValue = parseFloat((Math.round(defaultValue * 1000) / 1000).toPrecision(5));
         if (defaultValue === null)
             displayValue = 'NULL';
         switch (true) {
             case propSettings === 'callback':
-                return '';
+                return null;
             case _.isArray(propSettings) && _.isNumber(propSettings[0]):
                 if (propSettings.length > 2)
                     controlComponent = <Slider
@@ -130,10 +133,10 @@ class ComponentDemo extends React.Component {
                 controlComponent = <p>ColorPicker</p>;
                 break;
             default:
-                return '';
+                return null;
         }
         return (
-            <div className="component-demo__control-block" key={propName}>
+            <div className="component-demo__control-block" key={'component-' + propName}>
                 <p className="caption">
                     {`${this.props.component}.${propName} = `}<span>{displayValue}</span>
                 </p>
@@ -146,35 +149,36 @@ class ComponentDemo extends React.Component {
         this._loadModule(this.props.component);
     }
 
-    shouldComponentUpdate(nextProps, nextState) {
-        //return !_.isMatch(this.props, nextProps);
-        return true;
-    }
-
     componentWillReceiveProps(nextProps) {
         if (nextProps.component != this.props.component)
             this._loadModule(nextProps.component);
     }
 
+
     render() {
 
         const TestComponent = this.module['default'];
-        let propControls = Object.keys(this.state.componentPropSettings).map(this._getControlBlock);
+        let propControls = Object.keys(this.state.componentPropSettings)
+                                 .map(this._getControlBlock)
+                                 .filter(v => v !== null);
         return (
             <div className="component-demo">
                 <div className="component-demo__component content-pane">
                     <GlassPane id={this._getId() + '-content'} hasTransition={true}>
-                        <div className="component-demo__component-console">
-                            {this.state.console}
+                        <div className="component-demo__component-body" key="component-body">
+                            <div className="component-demo__component-console">
+                                {this.state.console}
+                            </div>
+                            <div className="component-demo__component-content">
+                                <TestComponent id={this._getId() + '-component'} {...this.state.componentProps}/>
+                            </div>
                         </div>
-                        <div className="component-demo__component-content">
-                            <TestComponent id={this._getId() + '-component'} {...this.state.componentProps}/>
-                        </div>
+                        <div key="someOtherChild"></div>
                     </GlassPane>
                 </div>
                 <div className="component-demo__controls content-pane">
                     <GlassPane id={this._getId() + '-controls'} hasTransition={true} scroll={true}>
-                        <div className="component-demo__component-description">
+                        <div className="component-demo__component-description" key="component-description">
                             <p className="heading">{this.props.component} component</p>
                             {this.props.children}
                         </div>

@@ -62,13 +62,17 @@ class Slider extends React.Component {
                 this._updateValue(value, true);
             }
         }
-        /*else
-         debugger;*/
+        let a = true;
         return !Utils.compareObjectProps(this.props, props);
     }
 
     componentDidUpdate(prevProps, prevState) {
         this._redraw();
+    }
+
+    componentWillUnmount() {
+        this.__container.remove();
+        delete this.__container;
     }
 
     getValue() {
@@ -114,7 +118,7 @@ class Slider extends React.Component {
         let epsilon = (this.props.max - this.props.min) * 10e-4;
         value = parseFloat(value);
         if (this.props.step)
-            value = Math.max(this.props.min, Math.min(this.props.max, Utils.closestFraction(value - this.props.step / 10, this.props.step)));
+            value = Math.max(this.props.min, Math.min(this.props.max, this.props.min + Utils.closestFraction(value - this.props.min - epsilon, this.props.step)));
         if (force)
             this.setState({value}, this._updateView(value));
         else if (Math.abs(value - this.state.value) > epsilon) {
@@ -126,12 +130,18 @@ class Slider extends React.Component {
     }
 
     _redraw() {
-        console.log('redraw ' + this.props.id);
         let _self = this;
         let height = Math.round(_self.props.size);
         let svg = _self.__container.select("svg")
                        .attr('height', height);
         let gradientInterpolationDensity = 10;
+
+
+        /**Cleaning memory**/
+        svg.select('.track-overlay').on('.drag', null);
+        svg.selectAll('g').remove();
+        delete _self['_interpolateValue'];
+
 
         let cloneMe = function () {
             return this.parentNode.appendChild(this.cloneNode(true));
@@ -143,13 +153,11 @@ class Slider extends React.Component {
                                     .clamp(true);
 
 
-        svg.selectAll('g').remove();
-
         let slider = svg.append("g")
                         .attr("class", "slider")
                         .attr("transform", `translate(0, ${_self.props.sliderOffset * _self.props.size})`);
 
-        let tickCount = Math.max(2, _self.props.ticks);
+        let tickCount = Math.max(0, _self.props.ticks);
         let ticks = _.uniq(_self._interpolateValue.ticks(tickCount)
                                 .concat(_self._interpolateValue.domain()));
         ticks = ticks.map(_self._interpolateValue.tickFormat(ticks.length, this.props.tickFormat));
@@ -176,13 +184,9 @@ class Slider extends React.Component {
               .select(cloneMe)
               .attr("class", "track-overlay")
               .call(d3.drag()
-                      .on("start.interrupt", function () {
-                          slider.interrupt();
-                      })
                       .on("start drag", function () {
                           let x = d3_live.event.x / svg.select('.slider').node().getBBox().width;
                           d3_live.event.sourceEvent.stopPropagation();
-                          d3_live.event.sourceEvent.stopImmediatePropagation();
                           d3_live.event.sourceEvent.preventDefault();
                           _self._updateValue(_self._interpolateValue.invert(x * 100));
                       }));
@@ -269,19 +273,19 @@ const defaultProps = {
 };
 
 const propSettings = {
+    size: [5, 150],
     min: [-50, 50],
     max: [50, 100],
-    size: [10, 100],
-    step: [0, 10],
-    colorScheme: Object.keys(colorSchemes),
+    step: [0, 10, 0.1],
     sliderOffset: [0, 1],
-    tickOffset: [0, 1],
     captionsOffset: [0, 1],
+    handleRadius: [0, 15],
+    tickOffset: [0, 1],
     tickSize: [0, 15],
     ticks: [0, 20, 1],
     tickFormat: [],
-    handleRadius: [0, 15],
     tickSuffix: [],
+    colorScheme: Object.keys(colorSchemes),
     onChange: 'callback'
 };
 

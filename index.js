@@ -1,10 +1,12 @@
 var express = require('express');
+var expressStaticGzip = require("express-static-gzip");
 var app = express();
 
 app.set('port', (process.env.PORT || 5000));
 
-app.use(express.static(__dirname + '/web', {
-    index: false
+app.use('/', expressStaticGzip(__dirname + '/web', {
+    indexFromEmptyFile: false,
+    enableBrotli: true
 }));
 
 // views is directory for all template files
