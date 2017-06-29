@@ -273,6 +273,7 @@ const defaultProps = {
 };
 
 const propSettings = {
+    colorScheme: Object.keys(colorSchemes),
     size: [5, 150],
     min: [-50, 50],
     max: [50, 100],
@@ -285,7 +286,6 @@ const propSettings = {
     ticks: [0, 20, 1],
     tickFormat: [],
     tickSuffix: [],
-    colorScheme: Object.keys(colorSchemes),
     onChange: 'callback'
 };
 

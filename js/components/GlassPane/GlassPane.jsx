@@ -210,6 +210,8 @@ class GlassPane extends React.Component {
         this.setState({
             scrollOffsetTarget: offset
         }, function () {
+            this.__contentBox.interrupt();
+            this.__scrollHandle.interrupt();
             this.__scrollTimer.restart(this._tweenScroll);
         }.bind(this));
     }
@@ -273,6 +275,10 @@ class GlassPane extends React.Component {
             });
             this.__contentBox.call(d3.drag()
                                      //start measuring of drag speed
+                                     .on('start.interrupt', function () {
+                                         this.__contentBox.interrupt();
+                                         this.__scrollHandle.interrupt();
+                                     })
                                      .on('start', function () {
                                          if (d3_live.event.identifier == 'mouse')
                                              return true;
@@ -315,6 +321,10 @@ class GlassPane extends React.Component {
                                      }))
                 .on('mousedown.drag', null);
             this.__scrollHandle.call(d3.drag()
+                                       .on('start.interrupt', function () {
+                                           this.__contentBox.interrupt();
+                                           this.__scrollHandle.interrupt();
+                                       })
                                        .on("start", function () {
                                            let ev = d3_live.event;
                                            dragStartY = Utils.getMouseEventOffset(ev.sourceEvent).offsetY;
@@ -358,7 +368,7 @@ class GlassPane extends React.Component {
                 .select('.glass-pane__content')
                 .style('transform', `translate(0, ${this._getScrollPosition()}px)`);
 
-            this.__scrollHandle.style('top', this._getScrollHandlePosition() + 'px');
+            this.__scrollHandle.style('transform', `translateY(${this._getScrollHandlePosition()}px`);
         }.bind(this));
     }
 
@@ -458,7 +468,6 @@ class GlassPane extends React.Component {
 
 
     componendDidUpdate() {
-        console.log(`render ${this.props.id}`);
         this._setDOMCache();
         if (this.props.hasTransition === true)
             d3.select(this.__container.parentNode).on(Utils.getAllTransitionEvents(), this._redraw);

@@ -10,7 +10,7 @@ import d3 from '../../d3-lib';
 import Utils from '../../utils';
 
 import Slider from '../Slider/Slider';
-import SwitchSelector from '../SwitchSelector/SwitchSelector';
+import CarouselSelector from '../CarouselSelector/CarouselSelector';
 import GlassPane from '../GlassPane/GlassPane';
 
 const supportedComponents = ['Rosette', 'Slider'];
@@ -120,7 +120,7 @@ class ComponentDemo extends React.Component {
                     />;
                 break;
             case _.isArray(propSettings) && propSettings.length > 0:
-                controlComponent = <SwitchSelector
+                controlComponent = <CarouselSelector
                     options={propSettings}
                     value={defaultValue}
                     onChange={this.state.componentCallbacks[propName]}/>;

@@ -30,7 +30,7 @@ body {
 }
 
 .background-img {
-  background: #FFF url('/img/photos/img3.jpg');
+  background: #FFF url('/img/photos/img1.jpg');
   background-position: center center;
   background-repeat: no-repeat;
   background-size: cover;
@@ -73,4 +73,11 @@ $pane-transition-bezier: '.60,.32,.59,.99';
   -webkit-transform-style: preserve-3d;
   transform-style: preserve-3d;
   backface-visibility: hidden;
+
+  .switch-selector {
+    margin-left: 15px;
+    margin-top: 5px;
+  }
 }
+
+

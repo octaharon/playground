@@ -7,6 +7,7 @@ const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 const CompressionPlugin = require("compression-webpack-plugin");
 const BrotliPlugin = require('brotli-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
+const EJSBuilder = require('ejs-webpack-builder');
 
 if (debug)
     console.log("running in debug mode");
@@ -22,7 +23,6 @@ function getEntrySources(sources) {
 
 function getPlugins() {
     var plugs = [
-        new webpack.optimize.ModuleConcatenationPlugin(),
         new ExtractTextPlugin({
             filename: 'style.css',
             allChunks: true
@@ -39,8 +39,27 @@ function getPlugins() {
         })
 
     ];
+    if (debug) {
+        plugs.push(
+            new EJSBuilder({
+                root: __dirname,
+                files: [{
+                    source: {
+                        name: 'index.ejs',
+                        dir: './views'
+                    },
+                    target: {
+                        name: 'index.html',
+                        dir: '.'
+                    },
+                    encoding: 'utf8'
+                }]
+            })
+        );
+    }
     if (!debug) {
         plugs.push(
+            new webpack.optimize.ModuleConcatenationPlugin(),
             new CleanWebpackPlugin(['app', 'fonts'], {
                 root: __dirname + '/web',
                 verbose: true,
@@ -76,7 +95,11 @@ module.exports = {
     devServer: {
         contentBase: "./web",
         compress: false,
-        port: 8080
+        port: 8080,
+        hot: true,
+        historyApiFallback: {
+            index: '/app/'
+        }
     },
     entry: {
         app: getEntrySources([

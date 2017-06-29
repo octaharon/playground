@@ -105,7 +105,7 @@ class Utilities {
     getMouseEventOffset(e) {
         e = e || window.event;
 
-        let target = e.currentTarget || e.srcElement,
+        let target = e.target || e.srcElement,
             borderLeftWidth = parseInt(this.getActualStyle(target, 'border-left-Width'), 10),
             borderTopWidth = parseInt(this.getActualStyle(target, 'border-top-Width'), 10),
             rect = target.getBoundingClientRect(),

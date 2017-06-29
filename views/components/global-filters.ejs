@@ -1,0 +1,21 @@
+<svg id="filterFallbackLibrary" xmlns="http://www.w3.org/2000/svg" version="1.1" style="display:none">
+    <defs>
+        <filter id="global-filter-blur">
+            <feGaussianBlur stdDeviation="8"></feGaussianBlur>
+        </filter>
+        <mask id="global-horizontal-fade-15"
+              maskUnits="objectBoundingBox"
+              maskContentUnits="objectBoundingBox">
+            <linearGradient id="global-horizontal-fade-gradient"
+                            gradientUnits="objectBoundingBox"
+                            x1="0" x2="0"
+                            y1="0" y2="1">
+                <stop stopColor="white" stopOpacity="0" offset="0"/>
+                <stop stopColor="white" stopOpacity="1" offset="0.25"/>
+                <stop stopColor="white" stopOpacity="1" offset="0.75"/>
+                <stop stopColor="white" stopOpacity="0" offset="1"/>
+            </linearGradient>
+            <rect x="0" y="0" width="1" height="1" fill="global-horizontal-fade-gradient"/>
+        </mask>
+    </defs>
+</svg>
