@@ -94,6 +94,21 @@
 
           span {
             @include font-caption-bold;
+            color: #EEE;
+            &.quoted {
+              vertical-align: baseline;
+              &:before, &:after {
+                font-size: 1em;
+                color: #CCC;
+                vertical-align: middle;
+              }
+              &:before {
+                content: "«";
+              }
+              &:after {
+                content: "»";
+              }
+            }
           }
         }
 

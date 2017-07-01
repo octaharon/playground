@@ -1,0 +1,47 @@
+@import "../../../sass/fonts";
+@import "../../../sass/mixins";
+
+.textbox {
+  position: relative;
+  display: inline-block;
+  min-width: 70px;
+  padding: 5px 10px;
+  z-index: 10;
+  border-radius: 5px;
+  height: 30px;
+  box-sizing: border-box;
+  box-shadow: inset 0px 0px 3px hsla(0, 0, 0%, 0.8);
+  transition: all 0.1s ease-in-out;
+  @include gradient-horizontal-three-colors(hsla(0, 0, 0%, 0), hsla(0, 0, 0%, 0.8), 50%, hsla(0, 0, 0%, 0));
+  font-size: 16px;
+
+  .textbox-placeholder {
+    color: #AAA;
+    font-style: italic;
+    position: absolute;
+    top: 5px;
+    transition: all 0.1s ease-in-out;
+    left: 5px;
+  }
+
+  input {
+    z-index: 15;
+    font-size: 16px;
+    position: relative;
+    width: 100%;
+    display: block;
+    padding: 0;
+    margin: 0px 0px 0px 0px;
+    border: none;
+    background: none;
+    color: #FFF;
+    @include font-main;
+    &:focus {
+      outline: none;
+    }
+  }
+
+  &.focus {
+    box-shadow: inset 0px 0px 5px hsla(0, 0, 100%, 0.8);
+  }
+}

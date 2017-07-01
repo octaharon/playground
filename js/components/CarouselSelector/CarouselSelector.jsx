@@ -2,9 +2,8 @@ require('./CarouselSelector.scss');
 
 import React from 'react';
 import ReactDOM from 'react-dom';
-import update from 'immutability-helper';
-import PropTypes from 'prop-types';
-import _ from 'underscore';
+import PropTypes from '../../utilities/proptypes-extend';
+import _ from '../../utilities/underscore-extend';
 import d3 from '../../d3-lib';
 import * as d3_live from 'd3-selection';
 
@@ -12,11 +11,8 @@ import Utils from '../../utils';
 
 let propTypes =
     {
-        options: PropTypes.oneOfType([
-            PropTypes.arrayOf(PropTypes.number),
-            PropTypes.arrayOf(PropTypes.string)
-        ]).isRequired,
-        value: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+        options: PropTypes.arrayOf(PropTypes.literal).isRequired,
+        value: PropTypes.literal,
         onChange: PropTypes.func.isRequired
     };
 
@@ -257,6 +253,6 @@ class CarouselSelector extends React.Component {
 
 }
 
-CarouselSelector.propTypes = propTypes;
+CarouselSelector.propTypes = /* remove-proptypes */ propTypes;
 
 export default CarouselSelector;

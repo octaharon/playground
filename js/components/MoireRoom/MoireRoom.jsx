@@ -2,9 +2,9 @@ require('./MoireRoom.scss');
 
 import React from 'react';
 import ReactDOM from 'react-dom'
-import PropTypes from 'prop-types';
+import PropTypes from '../../utilities/proptypes-extend';
 import d3 from '../../d3-lib';
-import _ from 'underscore';
+import _ from '../../utilities/underscore-extend';
 import Utils from '../../utils';
 
 
@@ -256,7 +256,7 @@ const defaultProps = {
     rotateSpeed: -0.13,
     hueOffset: 0
 };
-MoireRoom.propTypes = propTypes;
+MoireRoom.propTypes = /* remove-proptypes */ propTypes;
 MoireRoom.defaultProps = defaultProps;
 
 export {MoireRoom as default, propSettings, defaultProps};

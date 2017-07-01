@@ -3,14 +3,15 @@ require('./ComponentDemo.scss');
 import React from 'react';
 import ReactDOM from 'react-dom';
 import update from 'immutability-helper';
-import PropTypes from 'prop-types';
-import _ from 'underscore';
+import PropTypes from '../../utilities/proptypes-extend';
+import _ from '../../utilities/underscore-extend';
 import d3 from '../../d3-lib';
 
 import Utils from '../../utils';
 
 import Slider from '../Slider/Slider';
 import CarouselSelector from '../CarouselSelector/CarouselSelector';
+import Textbox from '../Textbox/Textbox';
 import GlassPane from '../GlassPane/GlassPane';
 
 const supportedComponents = ['Rosette', 'Slider'];
@@ -90,10 +91,16 @@ class ComponentDemo extends React.Component {
             controlId = this._getId() + '-control-' + propName,
             defaultValue = null || this.state.componentProps[propName],
             displayValue = defaultValue;
+
         if (_.isNumber(defaultValue))
-            displayValue = parseFloat((Math.round(defaultValue * 1000) / 1000).toPrecision(5));
+            displayValue = (Math.round(defaultValue * 1000) / 1000).toPrecision(5);
+        if (_.isString(defaultValue))
+            displayValue = <span className="quoted">{defaultValue}</span>
         if (defaultValue === null)
-            displayValue = 'NULL';
+            displayValue = <span style="font-style:italic">NULL</span>;
+        else if (_.isString(displayValue))
+            displayValue = <span>{displayValue}</span>;
+
         switch (true) {
             case propSettings === 'callback':
                 return null;
@@ -126,7 +133,14 @@ class ComponentDemo extends React.Component {
                     onChange={this.state.componentCallbacks[propName]}/>;
                 break;
             case _.isArray(propSettings):
-                controlComponent = <p>Text input</p>;
+                controlComponent = <Textbox
+                    value={defaultValue}
+                    placeholder="Enter value"
+                    eventHandlers={{
+                        onPaste: e => e.preventDefault() && false,
+                        onChange: e => this.state.componentCallbacks[propName](e.value)
+                    }}
+                />;
                 break;
             case propSettings === true:
                 //checkbox
@@ -142,7 +156,7 @@ class ComponentDemo extends React.Component {
         return (
             <div className="component-demo__control-block" key={'component-' + propName}>
                 <p className="caption">
-                    <i className="fa fa-cogs"/>{`${this.props.component}.${propName} = `}<span>{displayValue}</span>
+                    <i className="fa fa-cogs"/>{`${this.props.component}.${propName} = `}{displayValue}
                 </p>
                 {controlComponent}
             </div>
@@ -196,6 +210,6 @@ class ComponentDemo extends React.Component {
     }
 }
 
-ComponentDemo.propTypes = propTypes;
+ComponentDemo.propTypes /* remove-proptypes */ = propTypes;
 
 export default ComponentDemo;

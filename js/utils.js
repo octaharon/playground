@@ -1,31 +1,13 @@
-import _ from 'underscore';
-import optimizedResize from './utilities/optimizedResize';
-import Wheel from 'wheel';
+
 
 require('./utilities/requestAnimationFrame-polyfill');
 require('./utilities/objectValues-polyfill');
 require('custom-event-polyfill');
 
-_.mixin({
-    keysWhere: function (object, predicate) {
-        let comparator = predicate;
-        if (!_.isFunction(predicate)) {
-            if (_.isObject(predicate))
-                comparator = val => _.isMatch(val, predicate);
-            else
-                comparator = val => val === predicate;
-        }
-        if (!_.isObject(object))
-            return object;
-        let ret = [];
-        Object.keys(object).forEach(key => {
-            if (comparator(object[key]) !== false)
-                ret.push(key);
-        });
-        return ret;
-    }
-});
+import Wheel from 'wheel';
 
+import _ from './utilities/underscore-extend';
+import optimizedResize from './utilities/optimizedResize';
 
 const transitionEvents = {
     'transition': 'transitionend',

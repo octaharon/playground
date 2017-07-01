@@ -2,8 +2,8 @@ require('./GlassPane.scss');
 
 import React from 'react';
 import ReactDOM from 'react-dom';
-import PropTypes from 'prop-types';
-import _ from 'underscore';
+import PropTypes from '../../utilities/proptypes-extend';
+import _ from '../../utilities/underscore-extend';
 import d3 from '../../d3-lib';
 import * as d3_live from 'd3-selection';
 import Utils from '../../utils';
@@ -807,7 +807,7 @@ const propSettings =
         scrollDecay: [0, 2000]
     };
 
-GlassPane.propTypes = propTypes;
+GlassPane.propTypes = /* remove-proptypes */ propTypes;
 GlassPane.defaultProps = defaultProps;
 
 export {GlassPane as default, propSettings, defaultProps};

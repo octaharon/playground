@@ -2,10 +2,10 @@ require('./Slider.scss');
 
 
 import React from 'react';
-import PropTypes from 'prop-types';
+import PropTypes from '../../utilities/proptypes-extend';
 import d3 from '../../d3-lib';
 import * as d3_live from 'd3-selection';
-import _ from 'underscore';
+import _ from '../../utilities/underscore-extend';
 
 import Utils from '../../utils';
 
@@ -160,7 +160,10 @@ class Slider extends React.Component {
         let tickCount = Math.max(0, _self.props.ticks);
         let ticks = _.uniq(_self._interpolateValue.ticks(tickCount)
                                 .concat(_self._interpolateValue.domain()));
-        ticks = ticks.map(_self._interpolateValue.tickFormat(ticks.length, this.props.tickFormat));
+        ticks = ticks.map(_self._interpolateValue.tickFormat(
+            ticks.length,
+            this.props.tickFormat.length ? this.props.tickFormat : null
+        ));
 
 
         let colorStops = svg.select('defs')
@@ -268,11 +271,13 @@ const defaultProps = {
     handleRadius: 7,
     ticks: 10,
     tickSuffix: '',
-    tickFormat: null,
+    tickFormat: '',
     colorScheme: 'cool-inverse'
 };
 
 const propSettings = {
+    tickFormat: [],
+    tickSuffix: [],
     colorScheme: Object.keys(colorSchemes),
     size: [5, 150],
     min: [-50, 50],
@@ -284,12 +289,10 @@ const propSettings = {
     tickOffset: [0, 1],
     tickSize: [0, 15],
     ticks: [0, 20, 1],
-    tickFormat: [],
-    tickSuffix: [],
     onChange: 'callback'
 };
 
-Slider.propTypes = propTypes;
+Slider.propTypes = /* remove-proptypes */ propTypes;
 Slider.defaultProps = defaultProps;
 
 export {Slider as default, propSettings, defaultProps};

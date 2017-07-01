@@ -1,9 +1,9 @@
 require('./Rosette.scss');
 
 import React from 'react';
-import PropTypes from 'prop-types';
+import PropTypes from '../../utilities/proptypes-extend';
 import d3 from '../../d3-lib';
-import _ from 'underscore';
+import _ from '../../utilities/underscore-extend';
 
 
 const propTypes = {
@@ -325,7 +325,7 @@ const propSettings = {
     cropY: [-1, 1, 1]
 };
 
-Rosette.propTypes = propTypes;
+Rosette.propTypes = /* remove-proptypes */ propTypes;
 Rosette.defaultProps = defaultProps;
 
 export {Rosette as default, defaultProps, propSettings};
